@@ -33,17 +33,19 @@ namespace BulletGame
 
     public class A_StraightLineStrategy : IAttackStrategy
     {
-        private Vector2 direction;
+        private readonly Player target;
         private Color color;
 
-        public A_StraightLineStrategy(Vector2 direction, Color color)
+        public A_StraightLineStrategy(Player direction, Color color)
         {
-            this.direction = Vector2.Normalize(direction);
+            this.target = direction;
             this.color = color;
         }
 
         public void Shoot(Vector2 position, List<Bullet> bullets, int bulletsPerShot, float bulletSpeed)
         {
+            Vector2 direction = target.Position - position;
+            direction.Normalize();
             for (int i = 0; i < bulletsPerShot; i++)
             {
                 bullets.Add(new Bullet(position, direction, bulletSpeed, color));
@@ -268,7 +270,7 @@ namespace BulletGame
             shootInterval: 0.2f,
             bulletSpeed: 400f,
             bulletsPerShot: 5,
-            strategy: new RadiusBulletStrategy(player, Color.Aqua)
+            strategy: new A_StraightLineStrategy(player, Color.Aqua)
             ),
 
             /*new AttackPattern(
