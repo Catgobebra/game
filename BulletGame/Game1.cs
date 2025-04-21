@@ -31,6 +31,64 @@ namespace BulletGame
         }
     }
 
+    public class A_StraightLineStrategy : IAttackStrategy
+    {
+        private Vector2 direction;
+        private Color color;
+
+        public A_StraightLineStrategy(Vector2 direction, Color color)
+        {
+            this.direction = Vector2.Normalize(direction);
+            this.color = color;
+        }
+
+        public void Shoot(Vector2 position, List<Bullet> bullets, int bulletsPerShot, float bulletSpeed)
+        {
+            for (int i = 0; i < bulletsPerShot; i++)
+            {
+                bullets.Add(new Bullet(position, direction, bulletSpeed, color));
+            }
+        }
+    }
+
+    public class RadiusBulletStrategy : IAttackStrategy
+    {
+        private readonly Player _target;
+        private Color _color;
+
+        public RadiusBulletStrategy(Player target, Color color)
+        {
+            _target = target;
+            _color = color;
+        }
+
+        public void Shoot(Vector2 shooterPosition, List<Bullet> bullets,
+                        int bulletsPerShot, float bulletSpeed)
+        {
+            // Вычисляем направление к игроку
+            Vector2 baseDirection = _target.Position - shooterPosition;
+            baseDirection.Normalize();
+
+            // Распределение пуль по дуге
+            float totalSpreadAngle = 90f;
+            float angleStep = totalSpreadAngle / (bulletsPerShot - 1);
+            float startAngle = -totalSpreadAngle / 2;
+
+            for (int i = 0; i < bulletsPerShot; i++)
+            {
+                float currentAngle = startAngle + angleStep * i;
+                float radians = MathHelper.ToRadians(currentAngle);
+
+                Matrix rotationMatrix = Matrix.CreateRotationZ(radians);
+                Vector2 dir = Vector2.Transform(baseDirection, rotationMatrix);
+                dir.Normalize();
+
+                bullets.Add(new Bullet(shooterPosition, dir, bulletSpeed, _color));
+            }
+        }
+    }
+
+
     public class SpiralStrategy : IAttackStrategy
     {
         private float spiralSpeed;
@@ -108,7 +166,7 @@ namespace BulletGame
         public Vector2 Direction { get; private set; }
         public float Speed { get; } = 500f;
         public float Size { get; } = 20f;
-        public Color Color { get; } = Color.LimeGreen;
+        public Color Color { get; } = Color.Red;
 
         public Player(Vector2 startPosition)
         {
@@ -163,8 +221,8 @@ namespace BulletGame
     {
         private GraphicsDeviceManager graphics;
         private List<Bullet> bullets;
-        private Enemy enemy;
         private Player player;
+        private Enemy enemy;
         private MouseState prevMouseState;
         private AttackPattern attackPattern;
 
@@ -185,6 +243,8 @@ namespace BulletGame
             graphics.PreferredBackBufferHeight = 720;
             graphics.ApplyChanges();
 
+            player = new Player(new Vector2(640, 600));
+
             enemy = new Enemy(
             position: new Vector2(640, 360),
             /* new AttackPattern(
@@ -198,11 +258,17 @@ namespace BulletGame
                      endColor: Color.Purple
                  )
              ),*/
-            new AttackPattern(
+            /*new AttackPattern(
             shootInterval: 0.2f,
             bulletSpeed: 400f,
             bulletsPerShot: 5,
             strategy: new StraightLineStrategy(new Vector2(0, 1), Color.Aqua)
+            ),*/
+            new AttackPattern(
+            shootInterval: 0.2f,
+            bulletSpeed: 400f,
+            bulletsPerShot: 5,
+            strategy: new RadiusBulletStrategy(player, Color.Aqua)
             ),
 
             /*new AttackPattern(
@@ -213,8 +279,6 @@ namespace BulletGame
             ), */
             Color.Crimson
             );
-
-            player = new Player(new Vector2(640, 600));
 
             base.Initialize();
         }
@@ -277,6 +341,8 @@ namespace BulletGame
             player.Draw(GraphicsDevice);
             enemy.Draw(GraphicsDevice);
             ///sdsdsd
+            /////saas
+            ///
             DrawBullets();
             var mouseState = Mouse.GetState();
             Vector2 aimPosition = new Vector2(mouseState.X, mouseState.Y);
