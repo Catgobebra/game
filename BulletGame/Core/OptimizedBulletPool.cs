@@ -10,7 +10,7 @@ namespace BulletGame.Core
     {
         private readonly HashSet<BulletController> _active = new HashSet<BulletController>();
         private readonly Stack<BulletController> _inactive = new Stack<BulletController>();
-        private const int MaxBullets = 2000;
+        private const int MaxBullets = 4000;
         private int _totalCreated;
 
         public BulletController GetBullet(Vector2 position, Vector2 direction, float speed, Color color, bool isPlayerBullet)

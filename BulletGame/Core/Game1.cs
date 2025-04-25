@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using BulletGame.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using SharpDX.MediaFoundation;
 
 namespace BulletGame
 {
@@ -118,8 +116,8 @@ namespace BulletGame
                 float radius = 1f + radiusStep * i;
 
                 Vector2 direction = new Vector2(
-                    (float)Math.Cos(angle) * radius,
-                    (float)Math.Sin(angle) * radius
+                    (float)Math.Sin(angle) * radius,
+                    (float)Math.Cos(angle) * radius
                 );
                 direction.Normalize();
 
@@ -175,10 +173,10 @@ namespace BulletGame
         private OptimizedBulletPool _bulletPool;
 
         SpriteFont textBlock;
-        Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch;
+        SpriteBatch spriteBatch;
 
-        private float timer;
-        private bool visible = true;
+        /*private float timer;
+        private bool visible = true;*/
 
         public Game1()
         {
@@ -188,7 +186,7 @@ namespace BulletGame
 
         protected override void LoadContent()
         {
-            spriteBatch = new Microsoft.Xna.Framework.Graphics.SpriteBatch(GraphicsDevice);
+            spriteBatch = new SpriteBatch(GraphicsDevice);
             textBlock = Content.Load<SpriteFont>("File");
             PrimitiveRenderer.Initialize(GraphicsDevice);
         }
@@ -208,15 +206,46 @@ namespace BulletGame
             position: new Vector2(640, 360),
             new AttackPattern(
                 shootInterval: 0.1f,
-                bulletSpeed: 300f,
+                bulletSpeed: 500f,
                 bulletsPerShot: 6,
                 false,
-                strategy: new SpiralStrategy(spiralSpeed: 2.2f,
-                    radiusStep: 12.0f,
+                strategy: new SpiralStrategy( // Спиральная атака
+                    spiralSpeed: 2.2f,
+                    radiusStep: 2.0f,
                     startColor: Color.Cyan,
                     endColor: Color.Purple)),
             Color.Crimson
             );
+            /*var enemy_model = new EnemyModel(
+            position: new Vector2(640, 360),
+            new AttackPattern(
+                shootInterval: 0.1f,
+                bulletSpeed: 500f,
+                bulletsPerShot: 6,
+                false,
+                strategy: new A_StraightLineStrategy(player, Color.Cyan)),
+            Color.Crimson
+            );*/
+            /*var enemy_model = new EnemyModel(
+            position: new Vector2(640, 360),
+            new AttackPattern(
+                shootInterval: 0.1f,
+                bulletSpeed: 300f,
+                bulletsPerShot: 6,
+                false,
+                strategy: new RadiusBulletStrategy(player, Color.Cyan)),
+            Color.Crimson
+            );*/
+            /*var enemy_model = new EnemyModel(
+            position: new Vector2(640, 360),
+            new AttackPattern(
+                shootInterval: 0.1f,
+                bulletSpeed: 500f,
+                bulletsPerShot: 6,
+                false,
+                strategy: new AstroidStrategy(10.4f, Color.Cyan)),
+            Color.Crimson
+            );*/
 
             enemy = new EnemyController(enemy_model, new EnemyView(enemy_model));
 
@@ -262,12 +291,12 @@ namespace BulletGame
             }
             prevMouseState = mouseState;
 
-            timer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            /*timer += (float)gameTime.ElapsedGameTime.TotalSeconds;
             if (timer > 0.1f)
             {
                 visible = !visible;
                 timer = 0;
-            }
+            }*/
 
             base.Update(gameTime);
         }
