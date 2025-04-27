@@ -24,7 +24,9 @@ namespace BulletGame
             var mouseState = Mouse.GetState();
 
             Vector2 mousePosition = new Vector2(mouseState.X, mouseState.Y);
+
             Model.UpdateDirection(mousePosition - Model.Position);
+
 
             Vector2 moveDirection = Vector2.Zero;
             if (keyboardState.IsKeyDown(Keys.W)) moveDirection.Y -= 1;
@@ -44,6 +46,11 @@ namespace BulletGame
         public void SetViewport(Viewport viewport)
         {
             Model.Viewport = viewport;
+        }
+
+        public void SetGeameArea(Rectangle gameArea)
+        {
+            Model.GameArea = gameArea;
         }
 
         public void Draw(GraphicsDevice device)

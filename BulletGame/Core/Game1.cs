@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BulletGame.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+
 
 namespace BulletGame
 {
@@ -70,6 +72,41 @@ namespace BulletGame
                         int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
         {
             Vector2 baseDirection = _target.Model.Position - shooterPosition;
+            baseDirection.Normalize();
+
+            float totalSpreadAngle = 90f;
+            float angleStep = totalSpreadAngle / (bulletsPerShot - 1);
+            float startAngle = -totalSpreadAngle / 2;
+
+            for (int i = 0; i < bulletsPerShot; i++)
+            {
+                float currentAngle = startAngle + angleStep * i;
+                float radians = MathHelper.ToRadians(currentAngle);
+
+                Matrix rotationMatrix = Matrix.CreateRotationZ(radians);
+                Vector2 dir = Vector2.Transform(baseDirection, rotationMatrix);
+                dir.Normalize();
+
+                OptimizedBulletPool.GetBullet(shooterPosition, dir, bulletSpeed, _color, isPlayerBullet);
+            }
+        }
+    }
+
+    public class ZRadiusBulletStrategy : IAttackStrategy
+    {
+        private Vector2 _direction;
+        private Color _color;
+
+        public ZRadiusBulletStrategy(Vector2 direction, Color color)
+        {
+            _direction = direction;
+            _color = color;
+        }
+
+        public void Shoot(Vector2 shooterPosition, OptimizedBulletPool OptimizedBulletPool,
+                        int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
+        {
+            Vector2 baseDirection = _direction;
             baseDirection.Normalize();
 
             float totalSpreadAngle = 90f;
@@ -170,7 +207,22 @@ namespace BulletGame
         private EnemyController enemy;
         private MouseState prevMouseState;
 
+        public Random rnd = new();
+
         private OptimizedBulletPool _bulletPool;
+        private List<EnemyController> _enemies = new List<EnemyController>();
+        private int CountEnemyNow = 0;
+        private int MaxCountEnemy = 5;
+
+        private float _hpTimer = 0; 
+        private float _spawnTimer;
+        private const float SpawnInterval = 5f;
+
+        private Rectangle _gameArea; // Область игрового поля
+        private Viewport _gameViewport; // Вид для игровых объектов
+        private Viewport _uiViewport;   // Вид для интерфейса
+
+
 
         SpriteFont textBlock;
         SpriteBatch spriteBatch;
@@ -193,16 +245,32 @@ namespace BulletGame
 
         protected override void Initialize()
         {
-            graphics.PreferredBackBufferWidth = 1280;
-            graphics.PreferredBackBufferHeight = 720;
+            graphics.PreferredBackBufferWidth = 1920;
+            graphics.PreferredBackBufferHeight = 1080;
+            graphics.HardwareModeSwitch = true;
+            graphics.IsFullScreen = true;
+            this.IsMouseVisible = false;
             graphics.ApplyChanges();
+
+            _gameArea = new Rectangle(
+            (graphics.PreferredBackBufferWidth - 1300) / 2,
+            (graphics.PreferredBackBufferHeight - 750) / 2,
+            1300,
+            750
+            );
+            _gameViewport = GraphicsDevice.Viewport;
+            _gameViewport.Bounds = _gameArea;
+
+            _uiViewport = GraphicsDevice.Viewport;
+            _uiViewport.Bounds = new Rectangle(0, 0, 1920, 1080);
+
 
             _bulletPool = new OptimizedBulletPool();
 
             var player_model = new PlayerModel(new Vector2(640, 600));
             player = new PlayerController(player_model, new PlayerView(player_model));
 
-            var enemy_model = new EnemyModel(
+            /*var enemy_model = new EnemyModel(
             position: new Vector2(640, 360),
             new AttackPattern(
                 shootInterval: 0.1f,
@@ -215,7 +283,7 @@ namespace BulletGame
                     startColor: Color.Cyan,
                     endColor: Color.Purple)),
             Color.Crimson
-            );
+            );*/
             /*var enemy_model = new EnemyModel(
             position: new Vector2(640, 360),
             new AttackPattern(
@@ -236,33 +304,57 @@ namespace BulletGame
                 strategy: new RadiusBulletStrategy(player, Color.Cyan)),
             Color.Crimson
             );*/
-            /*var enemy_model = new EnemyModel(
+            var enemy_model = new EnemyModel(
             position: new Vector2(640, 360),
             new AttackPattern(
                 shootInterval: 0.1f,
-                bulletSpeed: 500f,
+                bulletSpeed: 300f,
                 bulletsPerShot: 6,
                 false,
-                strategy: new AstroidStrategy(10.4f, Color.Cyan)),
+                strategy: new RadiusBulletStrategy(player, Color.Cyan)),
             Color.Crimson
-            );*/
+            );
 
-            enemy = new EnemyController(enemy_model, new EnemyView(enemy_model));
+            //_enemies.Add(new EnemyController(enemy_model, new EnemyView(enemy_model)));
 
             base.Initialize();
         }
 
         protected override void Update(GameTime gameTime)
         {
+            _spawnTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (_spawnTimer >= SpawnInterval && MaxCountEnemy > CountEnemyNow)
+            {
+                SpawnEnemy();
+                _spawnTimer = 0f;
+            }
+
+            // Обновляем всех врагов
+            foreach (var enemy in _enemies.ToList())
+            {
+                enemy.Update(gameTime, _bulletPool);
+
+                // Удаляем уничтоженных врагов
+                /*if (enemy.Model.IsDestroyed)
+                {
+                    _enemies.Remove(enemy);
+                }*/
+            }
+
+
+
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
             _bulletPool.Cleanup();
 
-            enemy.Update(gameTime, _bulletPool);
+            //enemy.Update(gameTime, _bulletPool);
             UpdateBullets(gameTime);
 
             player.SetViewport(GraphicsDevice.Viewport);
+            player.SetGeameArea(_gameArea);
+
             player.Update(gameTime);
 
             if (player.Model.Health <= 0)
@@ -282,11 +374,11 @@ namespace BulletGame
                     directionToAim.Normalize();
 
                 new AttackPattern(
-                shootInterval: 0.2f,
-                bulletSpeed: 340f,
-                bulletsPerShot: 1,
-                true,
-                strategy: new StraightLineStrategy(directionToAim, Color.Indigo)
+                    shootInterval: 0.2f,
+                    bulletSpeed: 340f,
+                    bulletsPerShot: 1,
+                    true,
+                    strategy: new StraightLineStrategy(directionToAim, Color.Indigo)
                 ).Shoot(player.Model.Position + directionToAim * 30f, _bulletPool);
             }
             prevMouseState = mouseState;
@@ -299,6 +391,34 @@ namespace BulletGame
             }*/
 
             base.Update(gameTime);
+        }
+
+        private void SpawnEnemy()
+        {
+            // Генерация позиции с учетом границ экрана
+            int buffer = 100;
+            Vector2 position = new Vector2(
+                rnd.Next(_gameArea.Left + buffer, _gameArea.Right - buffer),
+                rnd.Next(_gameArea.Top + buffer, _gameArea.Bottom - buffer)
+            );
+
+
+            // Выбор случайной стратегии атаки
+            //IAttackStrategy strategy = GetRandomStrategy();
+
+            var enemyModel = new EnemyModel(
+                position: position,
+                new AttackPattern(
+                    shootInterval: 0.1f,
+                    bulletSpeed: 500f,
+                    bulletsPerShot: 1,
+                    playerBullet: false,
+                    strategy: new A_StraightLineStrategy(player, Color.Cyan)),
+                Color.Crimson
+            );
+
+            _enemies.Add(new EnemyController(enemyModel, new EnemyView(enemyModel)));
+            CountEnemyNow++;
         }
 
         private void UpdateBullets(GameTime gameTime)
@@ -322,6 +442,32 @@ namespace BulletGame
                 }
             }
 
+            foreach (var bullet in activeBullets.Where(b => b.Model.IsPlayerBullet))
+            {
+                if (!bullet.Model.Active) continue;
+
+                foreach (var i in _enemies.ToList())
+                {
+                    if (bullet.CollidesWithEnemy(i))
+                    {
+                        Exit();
+                        // Наносим урон врагу
+                        //enemy.Model.Health -= 25;
+
+                        // Уничтожаем пулю
+                        _bulletPool.Return(bullet);
+
+                        // Удаляем врага если здоровье закончилось
+                        //if (enemy.Model.Health <= 0)
+                        //{
+                        _enemies.Remove(enemy);
+                        //}
+                        //break;
+                    }
+                }
+            }
+
+
             foreach (var bullet in activeBullets)
             {
                 if (!bullet.Model.Active) continue;
@@ -334,26 +480,96 @@ namespace BulletGame
                     _bulletPool.Return(bullet);
                 }
 
-                if (bullet.IsExpired(viewport))
+                if (bullet.IsExpired(_gameArea))
                     _bulletPool.Return(bullet);
             }
         }
+
+        private void DrawGameAreaBorders()
+        {
+            // Толщина линий границы
+            int borderThickness = 10;
+
+            // Верхняя граница
+            PrimitiveRenderer.DrawLine(
+                GraphicsDevice,
+                new Vector2(_gameArea.Left, _gameArea.Top),
+                new Vector2(_gameArea.Right, _gameArea.Top),
+                Color.White,
+                borderThickness
+            );
+
+            // Нижняя граница
+            PrimitiveRenderer.DrawLine(
+                GraphicsDevice,
+                new Vector2(_gameArea.Left, _gameArea.Bottom),
+                new Vector2(_gameArea.Right, _gameArea.Bottom),
+                Color.White,
+                borderThickness
+            );
+
+
+            // Левая граница
+            PrimitiveRenderer.DrawLine(
+                GraphicsDevice,
+                new Vector2(_gameArea.Left, _gameArea.Top),
+                new Vector2(_gameArea.Left, _gameArea.Bottom),
+                Color.White,
+                borderThickness
+            );
+
+            // Правая граница
+            PrimitiveRenderer.DrawLine(
+                GraphicsDevice,
+                new Vector2(_gameArea.Right, _gameArea.Top),
+                new Vector2(_gameArea.Right, _gameArea.Bottom),
+                Color.White,
+                borderThickness
+            );
+        }
+
+        private Vector2 GetClampedMousePosition()
+        {
+            var mouseState = Mouse.GetState();
+
+            // Ограничиваем координаты мыши границами экрана
+            int clampedX = (int)MathHelper.Clamp(
+                mouseState.X,
+                _gameArea.Left,
+                _gameArea.Right
+            );
+
+            int clampedY = (int)MathHelper.Clamp(
+                mouseState.Y,
+                _gameArea.Top,
+                _gameArea.Bottom
+            );
+
+            return new Vector2(clampedX, clampedY);
+        }
+
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
 
+            DrawGameAreaBorders();
+
             spriteBatch.Begin();
 
             player.Draw(GraphicsDevice);
-            enemy.Draw(GraphicsDevice);
-     
+
+            foreach (var enemy in _enemies)
+            {
+                enemy.Draw(GraphicsDevice);
+            }
+
+
             DrawBullets();
-            var mouseState = Mouse.GetState();
-            Vector2 aimPosition = new Vector2(mouseState.X, mouseState.Y);
+            Vector2 aimPosition = GetClampedMousePosition();
             PrimitiveRenderer.DrawPoint(GraphicsDevice, aimPosition, Color.Red, 4f);
 
-            spriteBatch.DrawString(textBlock, $"{player.Model.Health} Осталось душ", new Vector2(50, 50), Color.White);
+            spriteBatch.DrawString(textBlock, $"{player.Model.Health} ед. Ки", new Vector2(50, 50), Color.White);
             spriteBatch.End();
 
             base.Draw(gameTime);
@@ -368,28 +584,11 @@ namespace BulletGame
         }
     }
 
-    public class AttackPattern
+    class Bonus
     {
-        public float ShootInterval { get; }
-        public float BulletSpeed { get; }
-        public int BulletsPerShot { get; }
-        public bool isPlayerBullet { get; }
-        private IAttackStrategy attackStrategy;
-
-
-        public AttackPattern(float shootInterval, float bulletSpeed, int bulletsPerShot, bool playerBullet, IAttackStrategy strategy)
-        {
-            ShootInterval = shootInterval;
-            BulletSpeed = bulletSpeed;
-            BulletsPerShot = bulletsPerShot;
-            attackStrategy = strategy;
-            isPlayerBullet = playerBullet;
-        }
-
-        public void Shoot(Vector2 position, OptimizedBulletPool OptimizedBulletPool)
-        {
-            attackStrategy.Shoot(position, OptimizedBulletPool, BulletsPerShot, BulletSpeed, isPlayerBullet);
-        }
-
+        public AttackPattern pattern;
+        public string Sprite;
+        public Color color;
+        public Vector2 Position { get; private set; }
     }
 }

@@ -11,8 +11,9 @@ namespace BulletGame
         public float Speed { get; set; } = 500f;
         public float Size { get; set; } = 20f;
         public Color Color { get; set; } = Color.Red;
-        public int Health { get; set; } = 7;
+        public int Health { get; set; } = 8;
         public Viewport Viewport { get; set; }
+        public Rectangle GameArea { get; set; }
 
         public PlayerModel(Vector2 startPosition)
         {
@@ -22,10 +23,15 @@ namespace BulletGame
 
         public void UpdatePosition(Vector2 newPosition)
         {
-            Position = Vector2.Clamp(newPosition,
-            new Vector2(Size, Size),
-            new Vector2(Viewport.Width - Size, Viewport.Height - Size));
-
+            float halfSize = Size / 2;
+            Position = new Vector2(
+                MathHelper.Clamp(newPosition.X,
+                    GameArea.Left + halfSize,
+                    GameArea.Right - halfSize),
+                MathHelper.Clamp(newPosition.Y,
+                    GameArea.Top + halfSize,
+                    GameArea.Bottom - halfSize)
+            );
         }
 
         public void UpdateDirection(Vector2 newDirection)

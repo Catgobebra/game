@@ -28,12 +28,15 @@ namespace BulletGame
             }
         }
 
-        public bool IsExpired(Viewport viewport, float margin = 100f)
+        public bool IsExpired(Rectangle gameArea, float margin = -20f)
         {
-            return Model.Position.X < -margin ||
-                   Model.Position.X > viewport.Width + margin ||
-                   Model.Position.Y < -margin ||
-                   Model.Position.Y > viewport.Height + margin;
+            float globalX = Model.Position.X;
+            float globalY = Model.Position.Y;
+
+            return globalX < gameArea.Left - margin ||
+           globalX > gameArea.Right + margin ||
+           globalY < gameArea.Top - margin ||
+           globalY > gameArea.Bottom + margin;
         }
 
         public bool CollidesWithPlayer(PlayerController player)
@@ -41,6 +44,13 @@ namespace BulletGame
             List<Vector2> bulletVertices = Model.GetVertices();
             List<Vector2> playerVertices = player.Model.GetVertices();
             return SATCollision.CheckCollision(bulletVertices, playerVertices);
+        }
+
+        public bool CollidesWithEnemy(EnemyController enemy)
+        {
+            List<Vector2> bulletVertices = Model.GetVertices();
+            List<Vector2> enemyVertices = enemy.Model.GetVertices();
+            return SATCollision.CheckCollision(bulletVertices, enemyVertices);
         }
 
         public bool CollidesWithBullet(BulletController other)

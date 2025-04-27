@@ -115,6 +115,63 @@ public static class PrimitiveRenderer
         DrawPrimitives(device, vertices, PrimitiveType.TriangleList, 1);
     }
 
+    public static void DrawLine(
+    GraphicsDevice device,
+    Vector2 start,
+    Vector2 end,
+    Color color,
+    float thickness = 2f)
+    {
+        if (_effect == null || thickness <= 0) return;
+
+        // Явный сброс состояний рендеринга
+        device.BlendState = BlendState.AlphaBlend;
+        device.DepthStencilState = DepthStencilState.Default;
+        device.RasterizerState = RasterizerState.CullNone;
+
+        // Настройка матриц
+        _effect.World = Matrix.Identity;
+        _effect.View = Matrix.Identity;
+        _effect.Projection = Matrix.CreateOrthographicOffCenter(
+            0, device.Viewport.Width,
+            device.Viewport.Height, 0, 0, 1);
+
+        Vector2 direction = end - start;
+        float length = direction.Length();
+
+        if (length < float.Epsilon) return;
+
+        direction.Normalize();
+        Vector2 perpendicular = new Vector2(-direction.Y, direction.X) * thickness / 2f;
+
+        // Корректировка для точного позиционирования
+        Vector2 offset = perpendicular * 0.5f;
+
+        VertexPositionColor[] vertices = new VertexPositionColor[6]
+        {
+        // Первый треугольник
+        new VertexPositionColor(new Vector3(start + offset + perpendicular, 0), color),
+        new VertexPositionColor(new Vector3(end + offset + perpendicular, 0), color),
+        new VertexPositionColor(new Vector3(start + offset - perpendicular, 0), color),
+        
+        // Второй треугольник
+        new VertexPositionColor(new Vector3(end + offset + perpendicular, 0), color),
+        new VertexPositionColor(new Vector3(end + offset - perpendicular, 0), color),
+        new VertexPositionColor(new Vector3(start + offset - perpendicular, 0), color)
+        };
+
+        // Принудительная активация эффекта
+        _effect.CurrentTechnique.Passes[0].Apply();
+
+        // Отрисовка напрямую через GraphicsDevice
+        device.DrawUserPrimitives<VertexPositionColor>(
+            PrimitiveType.TriangleList,
+            vertices,
+            0,
+            2
+        );
+    }
+
     public static void DrawCircle(GraphicsDevice device, Vector2 position, int radius, int segments, Color color)
     {
         VertexPositionColor[] vertices = new VertexPositionColor[segments * 3];
