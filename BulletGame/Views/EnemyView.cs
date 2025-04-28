@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace BulletGame
 {
@@ -16,13 +17,16 @@ namespace BulletGame
 
         public void Draw(GraphicsDevice device)
         {
+            int scaledRadius = (int)(CircleRadius * _model.CurrentScale);
+
             PrimitiveRenderer.DrawCircle(
                 device,
                 _model.Position,
-                CircleRadius,
+                scaledRadius,
                 Segments,
-                _model.Color
+                Color.Lerp(_model.Color, Color.Red, 1 - _model.CurrentScale / _model.MaxScale) // Добавляем цветовой эффект
             );
         }
+
     }
 }

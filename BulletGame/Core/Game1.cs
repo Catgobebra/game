@@ -225,10 +225,8 @@ namespace BulletGame
 
 
         SpriteFont textBlock;
+        SpriteFont japanTextBlock;
         SpriteBatch spriteBatch;
-
-        /*private float timer;
-        private bool visible = true;*/
 
         public Game1()
         {
@@ -240,6 +238,7 @@ namespace BulletGame
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
             textBlock = Content.Load<SpriteFont>("File");
+            japanTextBlock = Content.Load<SpriteFont>("Japan");
             PrimitiveRenderer.Initialize(GraphicsDevice);
         }
 
@@ -248,7 +247,7 @@ namespace BulletGame
             graphics.PreferredBackBufferWidth = 1920;
             graphics.PreferredBackBufferHeight = 1080;
             graphics.HardwareModeSwitch = true;
-            graphics.IsFullScreen = true;
+            graphics.IsFullScreen = false;
             this.IsMouseVisible = false;
             graphics.ApplyChanges();
 
@@ -375,11 +374,11 @@ namespace BulletGame
 
                 new AttackPattern(
                     shootInterval: 0.2f,
-                    bulletSpeed: 340f,
+                    bulletSpeed: 900f,
                     bulletsPerShot: 1,
                     true,
-                    strategy: new StraightLineStrategy(directionToAim, Color.Indigo)
-                ).Shoot(player.Model.Position + directionToAim * 30f, _bulletPool);
+                    strategy: new PlayerExplosiveShotStrategy(Color.Beige, Color.Indigo)
+                ).Shoot(player.Model.Position, _bulletPool);
             }
             prevMouseState = mouseState;
 
@@ -397,14 +396,48 @@ namespace BulletGame
         {
             // Генерация позиции с учетом границ экрана
             int buffer = 100;
-            Vector2 position = new Vector2(
+            const int maxAttempts = 50; // Лимит попыток генерации
+            const float minPlayerDistance = 300f; // Минимум 300px от игрока
+            const float minEnemyDistance = 150f;  // Минимум 150px между врагами
+
+            for (int attempt = 0; attempt < maxAttempts; attempt++)
+            {
+                // Генерация позиции
+                Vector2 position = new Vector2(
+                    rnd.Next(_gameArea.Left + buffer, _gameArea.Right - buffer),
+                    rnd.Next(_gameArea.Top + buffer, _gameArea.Bottom - buffer)
+                );
+
+                // Проверка расстояния до игрока
+                if (Vector2.Distance(position, player.Model.Position) < minPlayerDistance)
+                    continue;
+
+                // Проверка расстояния до других врагов
+                bool tooClose = _enemies.Any(e =>
+                    Vector2.Distance(position, e.Model.Position) < minEnemyDistance);
+
+                if (!tooClose)
+                {
+                    var enemyModel = new EnemyModel(
+                    position: position,
+                    new AttackPattern(
+                        shootInterval: 0.1f,
+                        bulletSpeed: 500f,
+                        bulletsPerShot: 1,
+                        playerBullet: false,
+                        strategy: new A_StraightLineStrategy(player, Color.Cyan)),
+                    Color.Crimson
+                    );
+                    _enemies.Add(new EnemyController(enemyModel, new EnemyView(enemyModel)));
+                    CountEnemyNow++;
+                    return;
+                }
+            }
+
+            /*Vector2 position = new Vector2(
                 rnd.Next(_gameArea.Left + buffer, _gameArea.Right - buffer),
                 rnd.Next(_gameArea.Top + buffer, _gameArea.Bottom - buffer)
             );
-
-
-            // Выбор случайной стратегии атаки
-            //IAttackStrategy strategy = GetRandomStrategy();
 
             var enemyModel = new EnemyModel(
                 position: position,
@@ -415,10 +448,7 @@ namespace BulletGame
                     playerBullet: false,
                     strategy: new A_StraightLineStrategy(player, Color.Cyan)),
                 Color.Crimson
-            );
-
-            _enemies.Add(new EnemyController(enemyModel, new EnemyView(enemyModel)));
-            CountEnemyNow++;
+            );*/
         }
 
         private void UpdateBullets(GameTime gameTime)
@@ -446,22 +476,22 @@ namespace BulletGame
             {
                 if (!bullet.Model.Active) continue;
 
-                foreach (var i in _enemies.ToList())
+                foreach (var enem_ in _enemies.ToList())
                 {
-                    if (bullet.CollidesWithEnemy(i))
+                    if (bullet.CollidesWithEnemy(enem_))
                     {
-                        Exit();
+                        //Exit();
                         // Наносим урон врагу
-                        //enemy.Model.Health -= 25;
-
+                        enem_.Model.Health -= 1;
+                        enem_.Model.TriggerHitAnimation();
                         // Уничтожаем пулю
                         _bulletPool.Return(bullet);
-
                         // Удаляем врага если здоровье закончилось
-                        //if (enemy.Model.Health <= 0)
-                        //{
-                        _enemies.Remove(enemy);
-                        //}
+                        if (enem_.Model.Health <= 0)
+                        {
+                            _enemies.Remove(enem_);
+                            CountEnemyNow--;
+                        }
                         //break;
                     }
                 }
@@ -570,6 +600,9 @@ namespace BulletGame
             PrimitiveRenderer.DrawPoint(GraphicsDevice, aimPosition, Color.Red, 4f);
 
             spriteBatch.DrawString(textBlock, $"{player.Model.Health} ед. Ки", new Vector2(50, 50), Color.White);
+            spriteBatch.DrawString(japanTextBlock, $"せ\nん\nし", new Vector2(1750, 400), Color.White);
+            spriteBatch.DrawString(japanTextBlock, $"だいみょう", new Vector2(800, 940), Color.White);
+            spriteBatch.DrawString(japanTextBlock, $"ぶ\nし", new Vector2(100, 400), Color.White);
             spriteBatch.End();
 
             base.Draw(gameTime);
@@ -591,4 +624,41 @@ namespace BulletGame
         public Color color;
         public Vector2 Position { get; private set; }
     }
+
+    public class PlayerExplosiveShotStrategy : IAttackStrategy
+    {
+        private Color _mainColor;
+        private Color _explosionColor;
+
+        public PlayerExplosiveShotStrategy(Color mainColor, Color explosionColor)
+        {
+            _mainColor = mainColor;
+            _explosionColor = explosionColor;
+        }
+
+        public void Shoot(Vector2 position, OptimizedBulletPool bulletPool,
+                         int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
+        {
+            // Основной выстрел
+            //Vector2 mainDirection = GetMouseDirection(position);
+            //mainDirection.Normalize();
+            //bulletPool.GetBullet(position, mainDirection, bulletSpeed, _mainColor, isPlayerBullet);
+
+            // Взрывные частицы
+            const int explosionParticles = 12;
+            for (int i = 0; i < explosionParticles; i++)
+            {
+                float angle = MathHelper.TwoPi * i / explosionParticles;
+                Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+                bulletPool.GetBullet(position, dir, bulletSpeed * 0.7f, _explosionColor, isPlayerBullet);
+            }
+        }
+
+        private Vector2 GetMouseDirection(Vector2 shooterPosition)
+        {
+            MouseState mouseState = Mouse.GetState();
+            return new Vector2(mouseState.X, mouseState.Y) - shooterPosition;
+        }
+    }
+
 }

@@ -8,6 +8,8 @@ namespace BulletGame
     {
         public Vector2 Position { get; private set; }
 
+        public int Health { get; set; } = 5;
+
         public AttackPattern AttackPattern { get; }
         public Color Color { get; }
         public float ShootTimer { get; private set; }
@@ -47,5 +49,32 @@ namespace BulletGame
 
             return vertices;
         }
+
+        private float _hitAnimationTimer;
+        private const float HitAnimationDuration = 1.0f; // 1 секунда длительность
+        public float CurrentScale { get; private set; } = 1f;
+        public float MaxScale { get; set; } = 1.5f; // Максимальное увеличение на 50%
+
+        public void TriggerHitAnimation()
+        {
+            _hitAnimationTimer = HitAnimationDuration;
+        }
+
+        public void UpdateAnimation(GameTime gameTime)
+        {
+            if (_hitAnimationTimer > 0)
+            {
+                _hitAnimationTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                // Плавная интерполяция с использованием синусоиды
+                float progress = _hitAnimationTimer / HitAnimationDuration;
+                CurrentScale = 1f + (MaxScale - 1f) * (float)Math.Sin(progress * MathHelper.Pi);
+            }
+            else
+            {
+                CurrentScale = 1f;
+            }
+        }
+
     }
 }

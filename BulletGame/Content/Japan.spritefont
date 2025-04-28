@@ -11,7 +11,7 @@ with.
     <!--
     Modify this string to change the font that will be imported.
     -->
-    <FontName>ofont.ru_Bonzai.ttf</FontName>
+    <FontName>Naganoshi.ttf</FontName>
 
     <!--
     Size is a float value, measured in points. Modify this value to change
@@ -50,15 +50,15 @@ with.
     character set. The characters are ordered according to the Unicode standard.
     See the documentation for more information.
     -->
-      <CharacterRegions>
-      <CharacterRegion>
-        <Start>32</Start>
-        <End>127</End>
-      </CharacterRegion>
-          <CharacterRegion>
-        <Start>&#1040;</Start>
-        <End>&#1112;</End>
-    </CharacterRegion>
+    <CharacterRegions>
+	<CharacterRegion>
+		<Start>32</Start>
+		<End>127</End>
+	</CharacterRegion>
+	<CharacterRegion>
+		<Start>&#12352;</Start>
+		<End>&#12527;</End>
+	</CharacterRegion>
     </CharacterRegions>
   </Asset>
 </XnaContent>
