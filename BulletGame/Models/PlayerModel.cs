@@ -8,6 +8,14 @@ namespace BulletGame
     {
         public Vector2 Position { get; private set; }
         public Vector2 Direction { get; private set; }
+        public AttackPattern AdditionalAttack { get; set; } = new AttackPattern(
+        shootInterval: 0.2f,
+        bulletSpeed: 900f,
+        bulletsPerShot: 1,
+        true,
+        strategy: new PlayerExplosiveShotStrategy(Color.Beige, Color.Indigo)
+        );
+
         public float Speed { get; set; } = 500f;
         public float Size { get; set; } = 20f;
         public Color Color { get; set; } = Color.Red;

@@ -202,10 +202,11 @@ namespace BulletGame
 
     public class Game1 : Game
     {
-        private GraphicsDeviceManager graphics;
+        private GraphicsDeviceManager graphics;  
         private PlayerController player;
         private EnemyController enemy;
         private MouseState prevMouseState;
+        private KeyboardState prevKeyboardState;
 
         public Random rnd = new();
 
@@ -377,10 +378,26 @@ namespace BulletGame
                     bulletSpeed: 900f,
                     bulletsPerShot: 1,
                     true,
-                    strategy: new PlayerExplosiveShotStrategy(Color.Beige, Color.Indigo)
+                    strategy: new StraightLineStrategy(directionToAim, Color.Indigo)
                 ).Shoot(player.Model.Position, _bulletPool);
             }
             prevMouseState = mouseState;
+
+
+            var keyboardState = Keyboard.GetState();
+            if (keyboardState.IsKeyDown(Keys.Space) && prevKeyboardState.IsKeyDown(Keys.Space))
+            {
+                player.Model.Health -= 1;
+                new AttackPattern(
+                    shootInterval: 0.2f,
+                    bulletSpeed: 900f,
+                    bulletsPerShot: 1,
+                    true,
+                    strategy: new PlayerExplosiveShotStrategy(Color.Indigo, Color.Indigo)
+                ).Shoot(player.Model.Position, _bulletPool);
+            }
+
+            prevKeyboardState = keyboardState;
 
             /*timer += (float)gameTime.ElapsedGameTime.TotalSeconds;
             if (timer > 0.1f)
