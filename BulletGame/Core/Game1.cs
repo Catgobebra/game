@@ -9,201 +9,11 @@ using Microsoft.Xna.Framework.Input;
 
 namespace BulletGame
 {
-    public interface IAttackStrategy
-    {
-        void Shoot(Vector2 position, OptimizedBulletPool OptimizedBulletPool, int bulletsPerShot, float bulletSpeed, bool isPlayerBullet);
-    }
-
-    public class StraightLineStrategy : IAttackStrategy
-    {
-        private Vector2 direction;
-        private Color color;
-
-        public StraightLineStrategy(Vector2 direction, Color color)
-        {
-            this.direction = Vector2.Normalize(direction);
-            this.color = color;
-        }
-
-        public void Shoot(Vector2 position, OptimizedBulletPool OptimizedBulletPool, int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
-        {
-            for (int i = 0; i < bulletsPerShot; i++)
-            {
-                var bullet = OptimizedBulletPool.GetBullet(position, direction, bulletSpeed, color, isPlayerBullet);
-                if (bullet == null) break;
-            }
-        }
-    }
-
-    public class A_StraightLineStrategy : IAttackStrategy
-    {
-        private readonly PlayerController target;
-        private Color color;
-
-        public A_StraightLineStrategy(PlayerController direction, Color color)
-        {
-            this.target = direction;
-            this.color = color;
-        }
-
-        public void Shoot(Vector2 position, OptimizedBulletPool OptimizedBulletPool, int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
-        {
-            Vector2 direction = target.Model.Position - position;
-            direction.Normalize();
-            for (int i = 0; i < bulletsPerShot; i++)
-            {
-                if (OptimizedBulletPool.GetBullet(position, direction, bulletSpeed, color, isPlayerBullet) == null) return;
-            }
-        }
-    }
-
-    public class RadiusBulletStrategy : IAttackStrategy
-    {
-        private readonly PlayerController _target;
-        private Color _color;
-
-        public RadiusBulletStrategy(PlayerController target, Color color)
-        {
-            _target = target;
-            _color = color;
-        }
-
-        public void Shoot(Vector2 shooterPosition, OptimizedBulletPool OptimizedBulletPool,
-                        int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
-        {
-            Vector2 baseDirection = _target.Model.Position - shooterPosition;
-            baseDirection.Normalize();
-
-            float totalSpreadAngle = 90f;
-            float angleStep = totalSpreadAngle / (bulletsPerShot - 1);
-            float startAngle = -totalSpreadAngle / 2;
-
-            for (int i = 0; i < bulletsPerShot; i++)
-            {
-                float currentAngle = startAngle + angleStep * i;
-                float radians = MathHelper.ToRadians(currentAngle);
-
-                Matrix rotationMatrix = Matrix.CreateRotationZ(radians);
-                Vector2 dir = Vector2.Transform(baseDirection, rotationMatrix);
-                dir.Normalize();
-
-                OptimizedBulletPool.GetBullet(shooterPosition, dir, bulletSpeed, _color, isPlayerBullet);
-            }
-        }
-    }
-
-    public class ZRadiusBulletStrategy : IAttackStrategy
-    {
-        private Vector2 _direction;
-        private Color _color;
-
-        public ZRadiusBulletStrategy(Vector2 direction, Color color)
-        {
-            _direction = direction;
-            _color = color;
-        }
-
-        public void Shoot(Vector2 shooterPosition, OptimizedBulletPool OptimizedBulletPool,
-                        int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
-        {
-            Vector2 baseDirection = _direction;
-            baseDirection.Normalize();
-
-            float totalSpreadAngle = 90f;
-            float angleStep = totalSpreadAngle / (bulletsPerShot - 1);
-            float startAngle = -totalSpreadAngle / 2;
-
-            for (int i = 0; i < bulletsPerShot; i++)
-            {
-                float currentAngle = startAngle + angleStep * i;
-                float radians = MathHelper.ToRadians(currentAngle);
-
-                Matrix rotationMatrix = Matrix.CreateRotationZ(radians);
-                Vector2 dir = Vector2.Transform(baseDirection, rotationMatrix);
-                dir.Normalize();
-
-                OptimizedBulletPool.GetBullet(shooterPosition, dir, bulletSpeed, _color, isPlayerBullet);
-            }
-        }
-    }
-
-
-    public class SpiralStrategy : IAttackStrategy
-    {
-        private float spiralSpeed;
-        private float radiusStep;
-        private float angleOffset;
-        private Color startColor;
-        private Color endColor;
-
-        public SpiralStrategy(float spiralSpeed, float radiusStep, Color startColor, Color endColor)
-        {
-            this.spiralSpeed = spiralSpeed;
-            this.radiusStep = radiusStep;
-            this.startColor = startColor;
-            this.endColor = endColor;
-            angleOffset = 0f;
-        }
-
-        public void Shoot(Vector2 position, OptimizedBulletPool OptimizedBulletPool, int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
-        {
-            for (int i = 0; i < bulletsPerShot; i++)
-            {
-                float angle = angleOffset + MathHelper.TwoPi * i / bulletsPerShot;
-                float radius = 1f + radiusStep * i;
-
-                Vector2 direction = new Vector2(
-                    (float)Math.Sin(angle) * radius,
-                    (float)Math.Cos(angle) * radius
-                );
-                direction.Normalize();
-
-                Color color = Color.Lerp(startColor, endColor, (float)i / bulletsPerShot);
-
-                if (OptimizedBulletPool.GetBullet(position, direction, bulletSpeed, color, isPlayerBullet) == null) return;
-            }
-
-            angleOffset += spiralSpeed;
-            if (angleOffset >= MathHelper.TwoPi) angleOffset -= MathHelper.TwoPi;
-        }
-    }
-
-    public class AstroidStrategy : IAttackStrategy
-    {
-        private float angleOffset;
-        private float speedFactor;
-        private Color color;
-
-        public AstroidStrategy(float speedFactor, Color color)
-        {
-            this.speedFactor = speedFactor;
-            this.color = color;
-            angleOffset = 0f;
-        }
-
-        public void Shoot(Vector2 position, OptimizedBulletPool OptimizedBulletPool, int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
-        {
-            for (int i = 0; i < bulletsPerShot; i++)
-            {
-                float theta = angleOffset + MathHelper.TwoPi * i / bulletsPerShot;
-                Vector2 direction = new Vector2(
-                    (float)Math.Pow(Math.Cos(theta), 3),
-                    (float)Math.Pow(Math.Sin(theta), 3)
-                );
-                direction.Normalize();
-
-                OptimizedBulletPool.GetBullet(position, direction, bulletSpeed, color, isPlayerBullet);
-            }
-
-            angleOffset += speedFactor;
-            if (angleOffset >= MathHelper.TwoPi) angleOffset -= MathHelper.TwoPi;
-        }
-    }
-
     public class Game1 : Game
     {
         private GraphicsDeviceManager graphics;  
         private PlayerController player;
+        private Bonus bonus;
         private EnemyController enemy;
         private MouseState prevMouseState;
         private KeyboardState prevKeyboardState;
@@ -219,10 +29,9 @@ namespace BulletGame
         private float _spawnTimer;
         private const float SpawnInterval = 5f;
 
-        private Rectangle _gameArea; // Область игрового поля
-        private Viewport _gameViewport; // Вид для игровых объектов
-        private Viewport _uiViewport;   // Вид для интерфейса
-
+        private Rectangle _gameArea;
+        private Viewport _gameViewport;
+        private Viewport _uiViewport; 
 
 
         SpriteFont textBlock;
@@ -269,6 +78,8 @@ namespace BulletGame
 
             var player_model = new PlayerModel(new Vector2(640, 600));
             player = new PlayerController(player_model, new PlayerView(player_model));
+
+            bonus = new Bonus();
 
             /*var enemy_model = new EnemyModel(
             position: new Vector2(640, 360),
@@ -330,12 +141,10 @@ namespace BulletGame
                 _spawnTimer = 0f;
             }
 
-            // Обновляем всех врагов
             foreach (var enemy in _enemies.ToList())
             {
                 enemy.Update(gameTime, _bulletPool);
 
-                // Удаляем уничтоженных врагов
                 /*if (enemy.Model.IsDestroyed)
                 {
                     _enemies.Remove(enemy);
@@ -385,7 +194,7 @@ namespace BulletGame
 
 
             var keyboardState = Keyboard.GetState();
-            if (keyboardState.IsKeyDown(Keys.Space) && prevKeyboardState.IsKeyDown(Keys.Space))
+            if (keyboardState.IsKeyDown(Keys.Space) && prevKeyboardState.IsKeyUp(Keys.Space))
             {
                 player.Model.Health -= 1;
                 new AttackPattern(
@@ -411,25 +220,21 @@ namespace BulletGame
 
         private void SpawnEnemy()
         {
-            // Генерация позиции с учетом границ экрана
             int buffer = 100;
-            const int maxAttempts = 50; // Лимит попыток генерации
-            const float minPlayerDistance = 300f; // Минимум 300px от игрока
-            const float minEnemyDistance = 150f;  // Минимум 150px между врагами
+            const int maxAttempts = 50; 
+            const float minPlayerDistance = 300f; 
+            const float minEnemyDistance = 150f;
 
             for (int attempt = 0; attempt < maxAttempts; attempt++)
             {
-                // Генерация позиции
                 Vector2 position = new Vector2(
                     rnd.Next(_gameArea.Left + buffer, _gameArea.Right - buffer),
                     rnd.Next(_gameArea.Top + buffer, _gameArea.Bottom - buffer)
                 );
 
-                // Проверка расстояния до игрока
                 if (Vector2.Distance(position, player.Model.Position) < minPlayerDistance)
                     continue;
 
-                // Проверка расстояния до других врагов
                 bool tooClose = _enemies.Any(e =>
                     Vector2.Distance(position, e.Model.Position) < minEnemyDistance);
 
@@ -497,19 +302,16 @@ namespace BulletGame
                 {
                     if (bullet.CollidesWithEnemy(enem_))
                     {
-                        //Exit();
-                        // Наносим урон врагу
                         enem_.Model.Health -= 1;
                         enem_.Model.TriggerHitAnimation();
-                        // Уничтожаем пулю
+
                         _bulletPool.Return(bullet);
-                        // Удаляем врага если здоровье закончилось
+
                         if (enem_.Model.Health <= 0)
                         {
                             _enemies.Remove(enem_);
                             CountEnemyNow--;
                         }
-                        //break;
                     }
                 }
             }
@@ -534,10 +336,8 @@ namespace BulletGame
 
         private void DrawGameAreaBorders()
         {
-            // Толщина линий границы
             int borderThickness = 10;
 
-            // Верхняя граница
             PrimitiveRenderer.DrawLine(
                 GraphicsDevice,
                 new Vector2(_gameArea.Left, _gameArea.Top),
@@ -546,7 +346,6 @@ namespace BulletGame
                 borderThickness
             );
 
-            // Нижняя граница
             PrimitiveRenderer.DrawLine(
                 GraphicsDevice,
                 new Vector2(_gameArea.Left, _gameArea.Bottom),
@@ -556,7 +355,6 @@ namespace BulletGame
             );
 
 
-            // Левая граница
             PrimitiveRenderer.DrawLine(
                 GraphicsDevice,
                 new Vector2(_gameArea.Left, _gameArea.Top),
@@ -565,7 +363,6 @@ namespace BulletGame
                 borderThickness
             );
 
-            // Правая граница
             PrimitiveRenderer.DrawLine(
                 GraphicsDevice,
                 new Vector2(_gameArea.Right, _gameArea.Top),
@@ -579,7 +376,6 @@ namespace BulletGame
         {
             var mouseState = Mouse.GetState();
 
-            // Ограничиваем координаты мыши границами экрана
             int clampedX = (int)MathHelper.Clamp(
                 mouseState.X,
                 _gameArea.Left,
@@ -603,6 +399,8 @@ namespace BulletGame
             DrawGameAreaBorders();
 
             spriteBatch.Begin();
+
+            bonus.Draw(GraphicsDevice);
 
             player.Draw(GraphicsDevice);
 
@@ -640,42 +438,18 @@ namespace BulletGame
         public string Sprite;
         public Color color;
         public Vector2 Position { get; private set; }
-    }
 
-    public class PlayerExplosiveShotStrategy : IAttackStrategy
-    {
-        private Color _mainColor;
-        private Color _explosionColor;
-
-        public PlayerExplosiveShotStrategy(Color mainColor, Color explosionColor)
+        public void Draw(GraphicsDevice device)
         {
-            _mainColor = mainColor;
-            _explosionColor = explosionColor;
-        }
+            int scaledRadius = (int)(30 * 1f);
 
-        public void Shoot(Vector2 position, OptimizedBulletPool bulletPool,
-                         int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
-        {
-            // Основной выстрел
-            //Vector2 mainDirection = GetMouseDirection(position);
-            //mainDirection.Normalize();
-            //bulletPool.GetBullet(position, mainDirection, bulletSpeed, _mainColor, isPlayerBullet);
-
-            // Взрывные частицы
-            const int explosionParticles = 12;
-            for (int i = 0; i < explosionParticles; i++)
-            {
-                float angle = MathHelper.TwoPi * i / explosionParticles;
-                Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
-                bulletPool.GetBullet(position, dir, bulletSpeed * 0.7f, _explosionColor, isPlayerBullet);
-            }
-        }
-
-        private Vector2 GetMouseDirection(Vector2 shooterPosition)
-        {
-            MouseState mouseState = Mouse.GetState();
-            return new Vector2(mouseState.X, mouseState.Y) - shooterPosition;
+            PrimitiveRenderer.DrawCircle(
+                device,
+                new Vector2(200,200),
+                scaledRadius,
+                30,
+                Color.Lerp(color, Color.Red, 1 - 1f / 1f)
+            );
         }
     }
-
 }

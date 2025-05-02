@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using BulletGame.Core;
+﻿using BulletGame.Core;
 using BulletGame;
 using Microsoft.Xna.Framework;
 
