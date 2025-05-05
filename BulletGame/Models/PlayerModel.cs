@@ -19,7 +19,7 @@ namespace BulletGame
         public float Speed { get; set; } = 500f;
         public float Size { get; set; } = 20f;
         public Color Color { get; set; } = Color.Red;
-        public int Health { get; set; } = 8;
+        public int Health { get; set; } = 800000;
         public Viewport Viewport { get; set; }
         public Rectangle GameArea { get; set; }
 

@@ -21,15 +21,17 @@ namespace BulletGame
         private OptimizedBulletPool _bulletPool;
         private List<EnemyController> _enemies = new List<EnemyController>();
         private List<Bonus> _bonuses = new List<Bonus>();
+        List<AttackPattern> attacksPatterns = new List<AttackPattern>();
+
         private int CountEnemyNow = 0;
-        private int MaxCountEnemy = 5;
+        private int MaxCountEnemy = 1;
         private int CountBonusNow = 0;
         private int MaxCountBonus = 1;
 
 
         private float _hpTimer = 0; 
         private float _spawnTimer;
-        private const float SpawnInterval = 10f;
+        private const float SpawnInterval = 5f;
 
         private Rectangle _gameArea;
         private Viewport _gameViewport;
@@ -81,7 +83,7 @@ namespace BulletGame
             var player_model = new PlayerModel(new Vector2(640, 600));
             player = new PlayerController(player_model, new PlayerView(player_model));
 
-            var attacksPatterns = new List<AttackPattern>
+            attacksPatterns = new List<AttackPattern>
             {
                 new AttackPattern(
                 shootInterval: 0.1f,
@@ -104,19 +106,15 @@ namespace BulletGame
                 bulletSpeed: 300f,
                 bulletsPerShot: 6,
                 false,
-                strategy: new RadiusBulletStrategy(player, Color.Cyan))
-            };
-
-            var enemy_model = new EnemyModel(
-            position: new Vector2(640, 360),
-            new AttackPattern(
+                strategy: new RadiusBulletStrategy(player, Color.Cyan)),
+                new AttackPattern(
                 shootInterval: 0.1f,
                 bulletSpeed: 300f,
                 bulletsPerShot: 6,
                 false,
-                strategy: new RadiusBulletStrategy(player, Color.Cyan)),
-            Color.Crimson
-            );
+                strategy: new AstroidStrategy(1.15f, Color.Cyan)),
+
+            };
 
             base.Initialize();
         }
@@ -239,6 +237,7 @@ namespace BulletGame
             const int maxAttempts = 50; 
             const float minPlayerDistance = 300f; 
             const float minEnemyDistance = 150f;
+            const float minBonusDistance = 100f;
 
             for (int attempt = 0; attempt < maxAttempts; attempt++)
             {
@@ -251,18 +250,15 @@ namespace BulletGame
                     continue;
 
                 bool tooClose = _enemies.Any(e =>
-                    Vector2.Distance(position, e.Model.Position) < minEnemyDistance);
+                    Vector2.Distance(position, e.Model.Position) < minEnemyDistance)
+                    && _bonuses.Any(e =>
+                    Vector2.Distance(position, e.Position) < minBonusDistance);
 
                 if (!tooClose)
                 {
                     var enemyModel = new EnemyModel(
                     position: position,
-                    new AttackPattern(
-                        shootInterval: 0.1f,
-                        bulletSpeed: 500f,
-                        bulletsPerShot: 1,
-                        playerBullet: false,
-                        strategy: new A_StraightLineStrategy(player, Color.Cyan)),
+                    attacksPatterns[rnd.Next(0, attacksPatterns.Count)],
                     Color.Crimson
                     );
                     _enemies.Add(new EnemyController(enemyModel, new EnemyView(enemyModel)));
@@ -270,23 +266,6 @@ namespace BulletGame
                     return;
                 }
             }
-
-
-            /*Vector2 position = new Vector2(
-                rnd.Next(_gameArea.Left + buffer, _gameArea.Right - buffer),
-                rnd.Next(_gameArea.Top + buffer, _gameArea.Bottom - buffer)
-            );
-
-            var enemyModel = new EnemyModel(
-                position: position,
-                new AttackPattern(
-                    shootInterval: 0.1f,
-                    bulletSpeed: 500f,
-                    bulletsPerShot: 1,
-                    playerBullet: false,
-                    strategy: new A_StraightLineStrategy(player, Color.Cyan)),
-                Color.Crimson
-            );*/
         }
 
         private void SpawnBonus()
@@ -295,7 +274,7 @@ namespace BulletGame
             const int maxAttempts = 50;
             const float minPlayerDistance = 300f;
             const float minEnemyDistance = 50f;
-            const float minBonusDistance = 50f;
+            const float minBonusDistance = 100f;
 
             for (int attempt = 0; attempt < maxAttempts; attempt++)
             {
@@ -322,23 +301,6 @@ namespace BulletGame
                     return;
                 }
             }
-
-
-            /*Vector2 position = new Vector2(
-                rnd.Next(_gameArea.Left + buffer, _gameArea.Right - buffer),
-                rnd.Next(_gameArea.Top + buffer, _gameArea.Bottom - buffer)
-            );
-
-            var enemyModel = new EnemyModel(
-                position: position,
-                new AttackPattern(
-                    shootInterval: 0.1f,
-                    bulletSpeed: 500f,
-                    bulletsPerShot: 1,
-                    playerBullet: false,
-                    strategy: new A_StraightLineStrategy(player, Color.Cyan)),
-                Color.Crimson
-            );*/
         }
 
         private void UpdateBullets(GameTime gameTime)
