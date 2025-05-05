@@ -6,14 +6,12 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-
 namespace BulletGame
 {
     public class Game1 : Game
     {
         private GraphicsDeviceManager graphics;  
         private PlayerController player;
-        private Bonus bonus;
         private EnemyController enemy;
         private MouseState prevMouseState;
         private KeyboardState prevKeyboardState;
@@ -22,12 +20,16 @@ namespace BulletGame
 
         private OptimizedBulletPool _bulletPool;
         private List<EnemyController> _enemies = new List<EnemyController>();
+        private List<Bonus> _bonuses = new List<Bonus>();
         private int CountEnemyNow = 0;
         private int MaxCountEnemy = 5;
+        private int CountBonusNow = 0;
+        private int MaxCountBonus = 1;
+
 
         private float _hpTimer = 0; 
         private float _spawnTimer;
-        private const float SpawnInterval = 5f;
+        private const float SpawnInterval = 10f;
 
         private Rectangle _gameArea;
         private Viewport _gameViewport;
@@ -79,42 +81,32 @@ namespace BulletGame
             var player_model = new PlayerModel(new Vector2(640, 600));
             player = new PlayerController(player_model, new PlayerView(player_model));
 
-            bonus = new Bonus();
-
-            /*var enemy_model = new EnemyModel(
-            position: new Vector2(640, 360),
-            new AttackPattern(
+            var attacksPatterns = new List<AttackPattern>
+            {
+                new AttackPattern(
                 shootInterval: 0.1f,
                 bulletSpeed: 500f,
                 bulletsPerShot: 6,
                 false,
-                strategy: new SpiralStrategy( // Спиральная атака
-                    spiralSpeed: 2.2f,
-                    radiusStep: 2.0f,
-                    startColor: Color.Cyan,
-                    endColor: Color.Purple)),
-            Color.Crimson
-            );*/
-            /*var enemy_model = new EnemyModel(
-            position: new Vector2(640, 360),
-            new AttackPattern(
+                strategy: new SpiralStrategy(
+                spiralSpeed: 2.2f,
+                radiusStep: 2.0f,
+                startColor: Color.Cyan,
+                endColor: Color.Purple)),
+                new AttackPattern(
                 shootInterval: 0.1f,
                 bulletSpeed: 500f,
                 bulletsPerShot: 6,
                 false,
                 strategy: new A_StraightLineStrategy(player, Color.Cyan)),
-            Color.Crimson
-            );*/
-            /*var enemy_model = new EnemyModel(
-            position: new Vector2(640, 360),
-            new AttackPattern(
+                new AttackPattern(
                 shootInterval: 0.1f,
                 bulletSpeed: 300f,
                 bulletsPerShot: 6,
                 false,
-                strategy: new RadiusBulletStrategy(player, Color.Cyan)),
-            Color.Crimson
-            );*/
+                strategy: new RadiusBulletStrategy(player, Color.Cyan))
+            };
+
             var enemy_model = new EnemyModel(
             position: new Vector2(640, 360),
             new AttackPattern(
@@ -126,14 +118,15 @@ namespace BulletGame
             Color.Crimson
             );
 
-            //_enemies.Add(new EnemyController(enemy_model, new EnemyView(enemy_model)));
-
             base.Initialize();
         }
 
         protected override void Update(GameTime gameTime)
         {
             _spawnTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (_spawnTimer >= SpawnInterval && MaxCountBonus > CountBonusNow) 
+                SpawnBonus();
 
             if (_spawnTimer >= SpawnInterval && MaxCountEnemy > CountEnemyNow)
             {
@@ -145,13 +138,35 @@ namespace BulletGame
             {
                 enemy.Update(gameTime, _bulletPool);
 
-                /*if (enemy.Model.IsDestroyed)
+                /*if (SATCollision.CheckCollision(player.Model.GetVertices(), enemy.Model.GetVertices()))
                 {
-                    _enemies.Remove(enemy);
+                    player.Model.Health += 20;
+                }*/
+            }
+
+            foreach (var bonus in _bonuses.ToList())
+            {
+                if (SATCollision.CheckCollision(player.Model.GetVertices(), bonus.GetVertices()))
+                {
+                    player.Model.Health += 20;
+                    CountBonusNow--;
+                    _bonuses.Remove(bonus);
+                }
+               
+
+                /*if (SATCollision.CheckCollision(player.Model.GetVertices(), enemy.Model.GetVertices()))
+                {
+                    player.Model.Health += 20;
                 }*/
             }
 
 
+            //if (SATCollision.CheckCollision(player.Model.GetVertices(), bonus.GetVertices()))
+            //{
+                //player.Model.Health += 10;
+                /*bonus.Position = new Vector2(rnd.Next(_gameArea.Left, _gameArea.Right), 
+                    rnd.Next(_gameArea.Top, _gameArea.Bottom));*/
+            //}
 
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
@@ -255,6 +270,59 @@ namespace BulletGame
                     return;
                 }
             }
+
+
+            /*Vector2 position = new Vector2(
+                rnd.Next(_gameArea.Left + buffer, _gameArea.Right - buffer),
+                rnd.Next(_gameArea.Top + buffer, _gameArea.Bottom - buffer)
+            );
+
+            var enemyModel = new EnemyModel(
+                position: position,
+                new AttackPattern(
+                    shootInterval: 0.1f,
+                    bulletSpeed: 500f,
+                    bulletsPerShot: 1,
+                    playerBullet: false,
+                    strategy: new A_StraightLineStrategy(player, Color.Cyan)),
+                Color.Crimson
+            );*/
+        }
+
+        private void SpawnBonus()
+        {
+            int buffer = 100;
+            const int maxAttempts = 50;
+            const float minPlayerDistance = 300f;
+            const float minEnemyDistance = 50f;
+            const float minBonusDistance = 50f;
+
+            for (int attempt = 0; attempt < maxAttempts; attempt++)
+            {
+                Vector2 position = new Vector2(
+                    rnd.Next(_gameArea.Left + buffer, _gameArea.Right - buffer),
+                    rnd.Next(_gameArea.Top + buffer, _gameArea.Bottom - buffer)
+                );
+
+                if (Vector2.Distance(position, player.Model.Position) < minPlayerDistance)
+                    continue;
+
+                bool tooClose = _enemies.Any(e =>
+                    Vector2.Distance(position, e.Model.Position) < minEnemyDistance)
+                    && _bonuses.Any(e =>
+                    Vector2.Distance(position, e.Position) < minBonusDistance);
+
+
+                if (!tooClose)
+                {
+                    var bonus = new Bonus();
+                    bonus.Position = position;
+                    _bonuses.Add(bonus);
+                    CountBonusNow++;
+                    return;
+                }
+            }
+
 
             /*Vector2 position = new Vector2(
                 rnd.Next(_gameArea.Left + buffer, _gameArea.Right - buffer),
@@ -400,7 +468,10 @@ namespace BulletGame
 
             spriteBatch.Begin();
 
-            bonus.Draw(GraphicsDevice);
+            foreach (var bon in _bonuses)
+            {
+                bon.Draw(GraphicsDevice);
+            }
 
             player.Draw(GraphicsDevice);
 
@@ -408,7 +479,6 @@ namespace BulletGame
             {
                 enemy.Draw(GraphicsDevice);
             }
-
 
             DrawBullets();
             Vector2 aimPosition = GetClampedMousePosition();
@@ -437,7 +507,7 @@ namespace BulletGame
         public AttackPattern pattern;
         public string Sprite;
         public Color color;
-        public Vector2 Position { get; private set; }
+        public Vector2 Position = new Vector2(400, 400);
 
         public void Draw(GraphicsDevice device)
         {
@@ -445,11 +515,28 @@ namespace BulletGame
 
             PrimitiveRenderer.DrawCircle(
                 device,
-                new Vector2(200,200),
+                Position,
                 scaledRadius,
                 30,
-                Color.Lerp(color, Color.Red, 1 - 1f / 1f)
+                Color.Lerp(color, Color.Red, 1 - 1f / 1.5f)
             );
+        }
+        public List<Vector2> GetVertices()
+        {
+            List<Vector2> vertices = new List<Vector2>();
+            float angleStep = MathHelper.TwoPi / 8;
+
+            for (int i = 0; i < 8; i++)
+            {
+                float angle = angleStep * i;
+                Vector2 offset = new Vector2(
+                    30 * (float)Math.Cos(angle),
+                    30 * (float)Math.Sin(angle)
+                );
+                vertices.Add(Position + offset);
+            }
+
+            return vertices;
         }
     }
 }
