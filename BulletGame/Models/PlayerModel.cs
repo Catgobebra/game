@@ -8,25 +8,22 @@ namespace BulletGame
     {
         public Vector2 Position { get; private set; }
         public Vector2 Direction { get; private set; }
-        public AttackPattern AdditionalAttack { get; set; } = new AttackPattern(
-        shootInterval: 0.2f,
-        bulletSpeed: 900f,
-        bulletsPerShot: 1,
-        true,
-        strategy: new PlayerExplosiveShotStrategy(Color.Beige, Color.Indigo)
-        );
+        public AttackPattern AdditionalAttack { get; set; }
+
+        public float AttackEffectTimer { get; set; }
 
         public float Speed { get; set; } = 500f;
         public float Size { get; set; } = 20f;
-        public Color Color { get; set; } = Color.Red;
-        public int Health { get; set; } = 800000;
+        public Color Color { get; set; } = Color.White;
+        public int Health { get; set; } = 800;
         public Viewport Viewport { get; set; }
         public Rectangle GameArea { get; set; }
 
-        public PlayerModel(Vector2 startPosition)
+        public PlayerModel(Vector2 startPosition, AttackPattern _pattern)
         {
             Position = startPosition;
             Direction = Vector2.UnitY;
+            AdditionalAttack = _pattern;
         }
 
         public void UpdatePosition(Vector2 newPosition)

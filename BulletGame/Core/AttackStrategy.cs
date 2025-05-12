@@ -89,19 +89,19 @@ public class RadiusBulletStrategy : IAttackStrategy
 
 public class ZRadiusBulletStrategy : IAttackStrategy
 {
-    private Vector2 _direction;
+    private readonly Func<Vector2> _getDirection;
     private Color _color;
 
-    public ZRadiusBulletStrategy(Vector2 direction, Color color)
+    public ZRadiusBulletStrategy(Func<Vector2> direction, Color color)
     {
-        _direction = direction;
+        _getDirection = direction;
         _color = color;
     }
 
     public void Shoot(Vector2 shooterPosition, OptimizedBulletPool OptimizedBulletPool,
                     int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
     {
-        Vector2 baseDirection = _direction;
+        Vector2 baseDirection = _getDirection();
         baseDirection.Normalize();
 
         float totalSpreadAngle = 90f;
@@ -222,5 +222,208 @@ public class PlayerExplosiveShotStrategy : IAttackStrategy
     {
         MouseState mouseState = Mouse.GetState();
         return new Vector2(mouseState.X, mouseState.Y) - shooterPosition;
+    }
+}
+
+public class StarPatternStrategy : IAttackStrategy
+{
+    private Color color;
+    private float rotation;
+
+    public StarPatternStrategy(Color color, float initialRotation = 0)
+    {
+        this.color = color;
+        this.rotation = initialRotation;
+    }
+
+    public void Shoot(Vector2 position, OptimizedBulletPool pool,
+                     int bulletsPerShot, float speed, bool isPlayer)
+    {
+        int points = 5;
+        for (int i = 0; i < points; i++)
+        {
+            float angle = rotation + MathHelper.TwoPi * i / points;
+            Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+
+            pool.GetBullet(position, dir, speed, color, isPlayer);
+
+            float innerAngle = angle + MathHelper.PiOver2 / 2;
+            Vector2 innerDir = new Vector2(
+                (float)Math.Cos(innerAngle) * 0.5f,
+                (float)Math.Sin(innerAngle) * 0.5f
+            );
+            pool.GetBullet(position, innerDir, speed, color, isPlayer);
+        }
+        rotation += MathHelper.ToRadians(5);
+    }
+}
+
+
+public class PulsingCircleStrategy : IAttackStrategy
+{
+    private Color _color;
+    private float _currentRadius;
+    private float _pulseSpeed;
+
+    public PulsingCircleStrategy(Color color, float pulseSpeed = 0.5f)
+    {
+        _color = color;
+        _pulseSpeed = pulseSpeed;
+        _currentRadius = 10f;
+    }
+
+    public void Shoot(Vector2 position, OptimizedBulletPool pool,
+                     int bulletsPerShot, float speed, bool isPlayer)
+    {
+        float angleStep = MathHelper.TwoPi / bulletsPerShot;
+
+        for (int i = 0; i < bulletsPerShot; i++)
+        {
+            float angle = angleStep * i;
+            Vector2 offset = new Vector2(
+                (float)Math.Cos(angle) * _currentRadius,
+                (float)Math.Sin(angle) * _currentRadius
+            );
+
+            Vector2 dir = offset;
+            dir.Normalize();
+
+            pool.GetBullet(position + offset, dir, speed, _color, isPlayer);
+        }
+
+        _currentRadius += _pulseSpeed;
+        if (_currentRadius > 50f) _currentRadius = 10f;
+    }
+}
+
+public class CrystalFanStrategy : IAttackStrategy
+{
+    private readonly Color _color;
+    private readonly float _fractalDepth;
+    private readonly Func<Vector2> _getBaseDirection;
+
+    public CrystalFanStrategy(Color color, Func<Vector2> getDirection, float fractalDepth = 2f)
+    {
+        _color = color;
+        _fractalDepth = fractalDepth;
+        _getBaseDirection = getDirection ?? throw new ArgumentNullException(nameof(getDirection));
+    }
+
+    public void Shoot(Vector2 position, OptimizedBulletPool pool,
+                     int bulletsPerShot, float speed, bool isPlayerBullet)
+    {
+        Vector2 baseDirection = _getBaseDirection();
+        if (baseDirection == Vector2.Zero) return;
+
+        baseDirection.Normalize();
+        CreateFan(position, baseDirection, pool, speed, isPlayerBullet, 0);
+    }
+
+    private void CreateFan(Vector2 pos, Vector2 baseDirection, OptimizedBulletPool pool,
+                          float speed, bool isPlayerBullet, int generation)
+    {
+        if (generation > _fractalDepth) return;
+
+        const float fanSpread = MathHelper.PiOver2;
+        int branches = 3 + generation * 2;
+        float angleStep = fanSpread / (branches - 1);
+        float startAngle = -fanSpread * 0.5f;
+        float currentSpeed = speed * (0.8f - generation * 0.2f);
+
+        float baseAngle = (float)Math.Atan2(baseDirection.Y, baseDirection.X);
+
+        for (int i = 0; i < branches; i++)
+        {
+            float angle = baseAngle + startAngle + angleStep * i;
+            Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+
+            if (pool.GetBullet(pos, dir, currentSpeed, _color, isPlayerBullet) == null)
+                return; // Прекращаем если пул переполнен
+
+            if (generation < _fractalDepth)
+            {
+                CreateFan(pos + dir * 50f, dir, pool, speed, isPlayerBullet, generation + 1);
+            }
+        }
+    }
+}
+
+public class FractalSquareStrategy : IAttackStrategy
+{
+    private Color _color;
+    private int _iterations;
+
+    public FractalSquareStrategy(Color color, int iterations = 3)
+    {
+        _color = color;
+        _iterations = iterations;
+    }
+
+    public void Shoot(Vector2 position, OptimizedBulletPool pool,
+                     int bulletsPerShot, float speed, bool isPlayer)
+    {
+        CreateSquareLayer(position, pool, speed, isPlayer, 0);
+    }
+
+    private void CreateSquareLayer(Vector2 center, OptimizedBulletPool pool,
+                                  float speed, bool isPlayer, int iteration)
+    {
+        if (iteration > _iterations) return;
+
+        int bulletsPerSide = 4 + iteration * 2;
+        float size = 50f * (float)Math.Pow(0.5f, iteration);
+
+        for (int side = 0; side < 4; side++)
+        {
+            for (int i = 0; i < bulletsPerSide; i++)
+            {
+                Vector2 offset = Vector2.Zero;
+                float t = (float)i / (bulletsPerSide - 1);
+
+                switch (side)
+                {
+                    case 0: offset = new Vector2(-size + 2 * size * t, -size); break;
+                    case 1: offset = new Vector2(size, -size + 2 * size * t); break;
+                    case 2: offset = new Vector2(size - 2 * size * t, size); break;
+                    case 3: offset = new Vector2(-size, size - 2 * size * t); break;
+                }
+
+                Vector2 dir = Vector2.Normalize(offset);
+                pool.GetBullet(center + offset, dir, speed * (1f - iteration * 0.2f),
+                             _color, isPlayer);
+            }
+        }
+
+        CreateSquareLayer(center, pool, speed, isPlayer, iteration + 1);
+    }
+}
+
+public class QuantumCircleStrategy : IAttackStrategy
+{
+    private Color _color;
+    private float _phaseShift;
+
+    public QuantumCircleStrategy(Color color, float phaseShift = 0.3f)
+    {
+        _color = color;
+        _phaseShift = phaseShift;
+    }
+
+    public void Shoot(Vector2 position, OptimizedBulletPool pool,
+                     int bulletsPerShot, float speed, bool isPlayer)
+    {
+        float angleStep = MathHelper.TwoPi / bulletsPerShot;
+
+        for (int i = 0; i < bulletsPerShot; i++)
+        {
+            float baseAngle = angleStep * i;
+            Vector2 dir = new Vector2(
+                (float)Math.Sin(baseAngle * 3 + _phaseShift),
+                (float)Math.Cos(baseAngle * 2 - _phaseShift)
+            );
+
+            dir.Normalize();
+            pool.GetBullet(position, dir, speed, _color, isPlayer);
+        }
     }
 }
