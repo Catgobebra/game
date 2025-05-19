@@ -16,6 +16,10 @@ namespace BulletGame
         public float Size { get; set; } = 20f;
         public Color Color { get; set; } = Color.White;
         public int Health { get; set; } = 800;
+
+        public int BonusHealth { get; set; } = 1;
+        public Vector2 AimPosition { get; set; }
+
         public Viewport Viewport { get; set; }
         public Rectangle GameArea { get; set; }
 

@@ -6,7 +6,7 @@ namespace BulletGame
 {
     public class EnemyModel
     {
-        public Vector2 Position { get; private set; }
+        public Vector2 Position { get; set; }
 
         public int Health { get; set; } = 5;
 
@@ -20,6 +20,13 @@ namespace BulletGame
             AttackPattern = pattern;
             Color = color;
             ShootTimer = pattern.ShootInterval;
+        }
+
+        public EnemyModel(Vector2? position, AttackPattern attackPattern, Color crimson)
+        {
+            this.position = position;
+            AttackPattern = attackPattern;
+            this.crimson = crimson;
         }
 
         public void UpdateShootTimer(float deltaTime)
@@ -51,6 +58,8 @@ namespace BulletGame
         }
 
         private float _hitAnimationTimer;
+        private Vector2? position;
+        private Color crimson;
         private const float HitAnimationDuration = 1.0f; // 1 секунда длительность
         public float CurrentScale { get; private set; } = 1f;
         public float MaxScale { get; set; } = 1.5f; // Максимальное увеличение на 50%
