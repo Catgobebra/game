@@ -15,12 +15,18 @@ namespace BulletGame
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
         private SpriteFont textBlock;
+        private GameRenderer _gameRenderer;
 
         private PlayerController player;
         private EnemyController enemy;
         private MouseState prevMouseState;
         private KeyboardState prevKeyboardState;
         private KeyboardState _prevKeyboardState;
+
+        private SpriteFont miniTextBlock;
+        private SpriteFont japanTextBlock;
+        private SpriteFont japanSymbol;
+
 
         public Random rnd = new();
 
@@ -76,30 +82,30 @@ namespace BulletGame
 
         protected override void LoadContent()
         {
-            //base.LoadContent();
-            var spriteBatch = new SpriteBatch(GraphicsDevice);
+            base.LoadContent();
+            spriteBatch = new SpriteBatch(GraphicsDevice);
+            PrimitiveRenderer.Initialize(GraphicsDevice);
+            _gameRenderer = new GameRenderer(spriteBatch, GraphicsDevice);
 
             // Загрузка шрифтов
             var textBlock = Content.Load<SpriteFont>("File");
             var miniTextBlock = Content.Load<SpriteFont>("FileMini");
             var japanTextBlock = Content.Load<SpriteFont>("Japan");
             var japanSymbol = Content.Load<SpriteFont>("JApanS");
-            textBlock = Content.Load<SpriteFont>("File");
 
             _uiManager = new UIManager(
-                textBlock,
-                japanTextBlock,
-                miniTextBlock,
-                japanSymbol,
-                spriteBatch,
-                GraphicsDevice,
-                player,
-                _enemies,
-                _bonuses,
-                _bulletPool,
-                _gameArea
-            );
-
+               textBlock,
+               japanTextBlock,
+               miniTextBlock,
+               japanSymbol,
+               spriteBatch,
+               GraphicsDevice,
+               player,
+               _enemies,
+               _bonuses,
+               _bulletPool,
+               _gameArea
+           );
         }
 
         protected override void Initialize()
@@ -107,7 +113,7 @@ namespace BulletGame
             graphics.PreferredBackBufferWidth = 1920;
             graphics.PreferredBackBufferHeight = 1080;
             graphics.HardwareModeSwitch = true;
-            graphics.IsFullScreen = false;
+            graphics.IsFullScreen = true;
             this.IsMouseVisible = false;
             graphics.ApplyChanges();
 
@@ -123,7 +129,7 @@ namespace BulletGame
             _uiViewport = GraphicsDevice.Viewport;
             _uiViewport.Bounds = new Rectangle(0, 0, 1920, 1080);
 
-            var player_model = new PlayerModel(new Vector2(640, 600), new AttackPattern(
+           var player_model = new PlayerModel(new Vector2(640, 600), new AttackPattern(
            shootInterval: 0.2f,
            bulletSpeed: 900f,
            bulletsPerShot: 8,
@@ -177,8 +183,8 @@ namespace BulletGame
             );
 
             _spawnManager.InitializeWaveStack();
-
             base.Initialize();
+            _uiManager._player = player;
         }
 
         public Vector2 GetDirectionAimPlayer()
@@ -232,7 +238,6 @@ namespace BulletGame
             }
             else
             {
-                // Обычная игровая логика
                 base.Update(gameTime);
             }
 
@@ -487,59 +492,15 @@ namespace BulletGame
             }
             else
             {
-                _uiManager.DrawGameElements(battleStarted, Name, NameColor, Lvl);
-                DrawGameObjects();
+                _gameRenderer.Draw(player, _enemies, _bonuses, _bulletPool, _uiManager._japanSymbol);
+
+                // Отрисовка UI
+                _uiManager.DrawGameUI(battleStarted, Name, NameColor, Lvl);
             }
 
             base.Draw(gameTime);
         }
 
-        private void DrawGameObjects()
-        {
-            // Проверка инициализации spriteBatch
-            if (spriteBatch == null)
-                return; // или выбросить исключение
-
-            spriteBatch.Begin();
-
-            // Проверка _uiManager и _japanSymbol
-            if (_uiManager != null)
-            {
-                foreach (var bon in _bonuses)
-                {
-                    // Используйте публичное свойство вместо private поля
-                    bon.Draw(spriteBatch, _uiManager._japanSymbol);
-                }
-            }
-
-            // Проверка инициализации player и GraphicsDevice
-            if (battleStarted && player != null && GraphicsDevice != null)
-            {
-                player.Draw(GraphicsDevice);
-            }
-
-            // Отрисовка врагов
-            foreach (var enemy in _enemies)
-            {
-                if (enemy != null && GraphicsDevice != null)
-                {
-                    enemy.Draw(GraphicsDevice);
-                }
-            }
-
-            // Отрисовка пуль
-            DrawBullets();
-
-            spriteBatch.End();
-        }
-
-        private void DrawBullets()
-        {
-            foreach (var bullet in _bulletPool.ActiveBullets)
-            {
-                bullet.Draw(GraphicsDevice);
-            }
-        }
         private void SpawnBonus()
         {
             bool spawned = _spawnManager.SpawnBonus();
@@ -605,5 +566,7 @@ namespace BulletGame
                return false;
 
            return true;
-       }
+       }S
        */
+
+

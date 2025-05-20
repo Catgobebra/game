@@ -14,7 +14,7 @@ namespace BulletGame
         private readonly SpriteBatch _spriteBatch;
         private readonly GraphicsDevice _graphicsDevice;
 
-        private readonly PlayerController _player;
+        public PlayerController _player;
         private readonly List<EnemyController> _enemies;
         private readonly List<Bonus> _bonuses;
         private readonly OptimizedBulletPool _bulletPool;
@@ -64,7 +64,30 @@ namespace BulletGame
                 borderThickness
             );
 
-            // Остальные линии границ аналогично...
+            PrimitiveRenderer.DrawLine(
+                 _graphicsDevice,
+                 new Vector2(_gameArea.Left, _gameArea.Bottom),
+                 new Vector2(_gameArea.Right, _gameArea.Bottom),
+                 Color.White,
+                 borderThickness
+             );
+
+
+            PrimitiveRenderer.DrawLine(
+                _graphicsDevice,
+                new Vector2(_gameArea.Left, _gameArea.Top),
+                new Vector2(_gameArea.Left, _gameArea.Bottom),
+                Color.White,
+                borderThickness
+            );
+
+            PrimitiveRenderer.DrawLine(
+                _graphicsDevice,
+                new Vector2(_gameArea.Right, _gameArea.Top),
+                new Vector2(_gameArea.Right, _gameArea.Bottom),
+                Color.White,
+                borderThickness
+            );
         }
 
         private void DrawUI(bool battleStarted, string name, Color nameColor, int lvl)
@@ -86,6 +109,8 @@ namespace BulletGame
             // Японские символы
             _spriteBatch.DrawString(_japanTextBlock, "せ\nん\nし",
                 new Vector2(1750, 400), Color.White);
+            _spriteBatch.DrawString(_japanTextBlock, $"だいみょう", new Vector2(800, 940), Color.White);
+            _spriteBatch.DrawString(_japanTextBlock, $"ぶ\nし", new Vector2(100, 400), Color.White);
 
             if (!battleStarted)
             {
@@ -125,6 +150,11 @@ namespace BulletGame
             }
 
             _spriteBatch.End();
+        }
+        public void DrawGameUI(bool battleStarted, string bonusName, Color bonusColor, int level)
+        {
+            DrawGameAreaBorders();
+            DrawUI(battleStarted, bonusName, bonusColor, level);
         }
     }
 }
