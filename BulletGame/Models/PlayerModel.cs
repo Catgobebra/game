@@ -15,7 +15,9 @@ namespace BulletGame
         public float Speed { get; set; } = 500f;
         public float Size { get; set; } = 20f;
         public Color Color { get; set; } = Color.White;
-        public int Health { get; set; } = 800;
+        public int Health { get; set; } = 8;
+        public float ShootTimer { get; set; }
+
 
         public int BonusHealth { get; set; } = 1;
         public Vector2 AimPosition { get; set; }
