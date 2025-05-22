@@ -10,7 +10,7 @@ namespace BulletGame.Core
     {
         private readonly HashSet<BulletController> _active = new HashSet<BulletController>();
         private readonly Stack<BulletController> _inactive = new Stack<BulletController>();
-        private const int MaxBullets = 4000;
+        private const int MaxBullets = 6000;
         private int _totalCreated;
 
         public BulletController GetBullet(Vector2 position, Vector2 direction, float speed, Color color, bool isPlayerBullet)
@@ -54,6 +54,14 @@ namespace BulletGame.Core
             {
                 Return(bullet);
             }
+        }
+        public void ForceCleanup()
+        {
+            foreach (var bullet in _active)
+            {
+                bullet.Model.Active = false;
+            }
+            Cleanup();
         }
 
         public IEnumerable<BulletController> ActiveBullets => _active;

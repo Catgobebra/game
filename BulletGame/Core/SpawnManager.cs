@@ -12,8 +12,8 @@ namespace BulletGame
         private readonly List<EnemyController> _enemies;
         private readonly List<Bonus> _bonuses;
         private readonly Stack<object> _enemyWaveStack;
-        private readonly List<AttackPattern> _attackPatterns;
         private readonly PlayerController _player;
+        private readonly List<AttackPattern> _attackPatterns;
 
         private const int SPAWN_BUFFER = 120;
         private const int MAX_SPAWN_ATTEMPTS = 100;
@@ -27,7 +27,6 @@ namespace BulletGame
             List<EnemyController> enemies,
             List<Bonus> bonuses,
             Stack<object> nemyWaveStack,
-            List<AttackPattern> attackPatterns,
             PlayerController player)
         {
             _rnd = rnd;
@@ -35,7 +34,38 @@ namespace BulletGame
             _enemies = enemies;
             _bonuses = bonuses;
             _enemyWaveStack = nemyWaveStack;
-            _attackPatterns = attackPatterns;
+            _attackPatterns = new List<AttackPattern>
+            {
+                new AttackPattern(
+                shootInterval: 0.1f,
+                bulletSpeed: 500f,
+                bulletsPerShot: 6,
+                false,
+                strategy: new SpiralStrategy(
+                spiralSpeed: 2.2f,
+                radiusStep: 2.0f,
+                startColor: Color.Cyan,
+                endColor: Color.Purple)),
+                new AttackPattern(
+                shootInterval: 0.1f,
+                bulletSpeed: 500f,
+                bulletsPerShot: 6,
+                false,
+                strategy: new A_StraightLineStrategy(_player, Color.Cyan)),
+                new AttackPattern(
+                shootInterval: 0.5f,
+                bulletSpeed: 300f,
+                bulletsPerShot: 6,
+                false,
+                strategy: new RadiusBulletStrategy(_player, Color.Cyan)),
+                new AttackPattern(
+                shootInterval: 0.1f,
+                bulletSpeed: 300f,
+                bulletsPerShot: 6,
+                false,
+                strategy: new AstroidStrategy(1.15f, Color.Cyan)),
+
+            };
             _player = player;
         }
 
@@ -103,25 +133,6 @@ namespace BulletGame
 
         public bool SpawnEnemy(Color? color = null, Vector2? prefPosition = null, AttackPattern pattern = null)
         {
-            /*const int buffer = 100;
-            const int maxAttempts = 50;
-            const float minPlayerDistance = 300f;
-
-            var finalPattern = pattern ?? _attackPatterns[_rnd.Next(_attackPatterns.Count)];
-            var finalColor = color ?? Color.Crimson;
-
-            for (int attempt = 0; attempt < maxAttempts; attempt++)
-            {
-                var pos = position ?? GetRandomPosition(buffer);
-
-                if (IsValidPosition(pos, minPlayerDistance))
-                {
-                    var enemyModel = new EnemyModel(pos, finalPattern, finalColor);
-                    _enemies.Add(new EnemyController(enemyModel, new EnemyView(enemyModel)));
-                    return true;
-                }
-            }
-            return false;*/
             var finalColor = color ?? GetRandomColor();
             var finalPattern = pattern ?? GetRandomPattern();
             var position = FindValidSpawnPosition(prefPosition);
@@ -251,6 +262,38 @@ namespace BulletGame
       
         public void InitializeWaveStack()
         {
+            var wave9 = new List<Action>
+            {
+                () => SpawnEnemy(
+                color: Color.SkyBlue,
+                pattern: new AttackPattern(
+                    0.1f, 250f, 100, false,
+                    new StarPatternStrategy(Color.SkyBlue)
+                    )
+                )
+            };
+
+
+            /*var wave8 = new List<Action>
+            {
+                () => SpawnEnemy(
+                    color: Color.Turquoise,
+                    prefPosition: _gameArea.Center.ToVector2() + new Vector2(0, -300),
+                    pattern: new AttackPattern(
+                        0.2f, 400f, 16, false,
+                        new SpiralStrategy(3.5f, 0.8f, Color.Cyan, Color.Navy)
+                    )
+                ),
+                () => SpawnEnemy(
+                    color: Color.Gold,
+                    prefPosition: _gameArea.Center.ToVector2() + new Vector2(0, 300),
+                    pattern: new AttackPattern(
+                        0.2f, 400f, 16, false,
+                        new SpiralStrategy(2.5f, 0.6f, Color.Gold, Color.DarkRed)
+                    )
+                )
+            };*/
+
             var wave7 = new List<Action>
             {
                 () => SpawnEnemy(
@@ -370,13 +413,15 @@ namespace BulletGame
                 )
             };
 
+            _enemyWaveStack.Push(wave9);
+            /*_enemyWaveStack.Push(wave8);
             _enemyWaveStack.Push(wave7);
             _enemyWaveStack.Push(wave6);
             _enemyWaveStack.Push(wave5);
             _enemyWaveStack.Push(wave4);
             _enemyWaveStack.Push(wave3);
             _enemyWaveStack.Push(wave2);
-            _enemyWaveStack.Push(wave1);
+            _enemyWaveStack.Push(wave1);*/
         }
 
         private Vector2 GetDirectionAimPlayer()
@@ -416,7 +461,6 @@ namespace BulletGame
                     _rnd.Next(_gameArea.Top + SPAWN_BUFFER, _gameArea.Bottom - SPAWN_BUFFER)
                 );
 
-                // Ограничение координат
                 pos.X = MathHelper.Clamp(pos.X,
                     _gameArea.Left + SPAWN_BUFFER,
                     _gameArea.Right - SPAWN_BUFFER);

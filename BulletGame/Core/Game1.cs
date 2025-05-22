@@ -33,7 +33,6 @@ namespace BulletGame
         private OptimizedBulletPool _bulletPool;
         private List<EnemyController> _enemies = new List<EnemyController>();
         private List<Bonus> _bonuses = new List<Bonus>();
-        List<AttackPattern> attacksPatterns = new List<AttackPattern>();
 
         private int CountEnemyNow = 0;
         private int MaxCountEnemy = 1;
@@ -139,46 +138,12 @@ namespace BulletGame
 
             _bulletPool = new OptimizedBulletPool();
 
-            attacksPatterns = new List<AttackPattern>
-            {
-                new AttackPattern(
-                shootInterval: 0.1f,
-                bulletSpeed: 500f,
-                bulletsPerShot: 6,
-                false,
-                strategy: new SpiralStrategy(
-                spiralSpeed: 2.2f,
-                radiusStep: 2.0f,
-                startColor: Color.Cyan,
-                endColor: Color.Purple)),
-                new AttackPattern(
-                shootInterval: 0.1f,
-                bulletSpeed: 500f,
-                bulletsPerShot: 6,
-                false,
-                strategy: new A_StraightLineStrategy(player, Color.Cyan)),
-                new AttackPattern(
-                shootInterval: 0.5f,
-                bulletSpeed: 300f,
-                bulletsPerShot: 6,
-                false,
-                strategy: new RadiusBulletStrategy(player, Color.Cyan)),
-                new AttackPattern(
-                shootInterval: 0.1f,
-                bulletSpeed: 300f,
-                bulletsPerShot: 6,
-                false,
-                strategy: new AstroidStrategy(1.15f, Color.Cyan)),
-
-            };
-
             _spawnManager = new SpawnManager(
                 rnd,
                 _gameArea,
                 _enemies,
                  _bonuses,
                 _enemyWaveStack,
-                attacksPatterns,
                 player
             );
 
@@ -228,6 +193,31 @@ namespace BulletGame
             }
 
             _prevKeyboardState = keyboardState;
+        }
+
+        private void ResetGameState()
+        {
+            player.Model.Health = 8;
+            player.Model.UpdatePosition(new Vector2(640,600));
+
+            _enemies.Clear();
+            _bonuses.Clear();
+
+            _bulletPool.ForceCleanup();
+            _bulletPool.Cleanup();
+
+            _spawnTimer = 0f;
+            preBattleTimer = 0f;
+            battleStarted = false;
+            _spawnManager.InitializeWaveStack();
+
+
+            CountEnemyNow = 0;
+            CountBonusNow = 0;
+            _canSpawnBonus = true;
+            _bonusSpawnTimer = 0f;
+
+            
         }
 
         protected override void Update(GameTime gameTime)
@@ -324,7 +314,10 @@ namespace BulletGame
             }
 
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
+            {
+                ResetGameState();
+                _currentState = GameState.Menu;
+            }
 
             _bulletPool.Cleanup();
 
@@ -337,7 +330,8 @@ namespace BulletGame
 
             if (player.Model.Health <= 0)
             {
-                Exit();
+                ResetGameState();
+                _currentState = GameState.Menu;
             }
 
             var mouseState = Mouse.GetState();
@@ -398,7 +392,7 @@ namespace BulletGame
 
                 if (current is Action action)
                 {
-                    action.Invoke(); // Вызываем действие для спавна врага
+                    action.Invoke(); 
                 }
                 else if (current is IEnumerable<object> group)
                 {
@@ -502,7 +496,6 @@ namespace BulletGame
             {
                 _gameRenderer.Draw(player, _enemies, _bonuses, _bulletPool, _uiManager._japanSymbol);
 
-                // Отрисовка UI
                 _uiManager.DrawGameUI(battleStarted, Name, NameColor, Lvl);
             }
 
@@ -580,7 +573,6 @@ namespace BulletGame
 
 /*
  Сижу в этой прокуренной студии в Намба, пялюсь в монитор, а за спиной — шлем. Да, тот самый. С треснутым козырьком, из-под которого сочится кровь. Врачи говорят: «Панические атаки, стресс». Но они не видят, как по ночам тени в кимоно шепчут: «Тамэки…». Не слышат, как сердце колотится, словно хочет вырваться из грудной клетки и сбежать куда подальше.
-
 А потом пришло письмо. От деда, о котором родители молчали всю жизнь. «Хидео Такахара оставил вам наследство». Папа, когда узнал, разбил чашку с чаем. Мама впервые закричала: «Не езди!». Но как не поехать? Там, в Сикоку, ответ. Или… тот самый «дом», куда зовёт голос.
 Купил билет на автобус. Перед уходом заглянул в зеркало. В отражении за моей спиной стоял он — в шлеме, с окровавленным мечом. На стене медленно проступило: «Добро пожаловать домой…».
 
@@ -591,15 +583,12 @@ namespace BulletGame
 У стены, на самодельной подставке из ящиков, стоят доспехи. Не музейные — настоящие. Ржавые пластины, перетянутые потёртым шёлком. Шлем с трещиной, как в моих видениях. А рядом — катана. Лезвие в ножнах, но рукоять… Она идеальна. Резная кость, обмотанная чёрной кожей. Будто её только вчера вытерли рисовой бумагой.
 
 Пока я решал юридические вопросы, мне пришлось остаться в городе. Проклятые головные боли не дают мне покоя, мучают меня каждый день. Иногда, в темноте я вижу искорёженные силуэты, они улыбаются и смеются. Я это не вынесу!
-
 Город медленно превращается в лабиринт.
 Сегодня, возвращаясь от юристов, забрёл в переулок, которого раньше не видел. Старые телефонные будки, облезлые плакаты 90-х, лужи с радужной плёнкой. А в конце — лавка. Витрина забита бутылками с мутной жидкостью и высушенными насекомыми.
 
 Внутри пахло ладаном и полынью. За прилавком — девушка, лет двадцати, в кимоно цвета грозовой тучи. Волосы — белые, будто её коснулся мороз из старых сказок. На шее — ожерелье из когтей. Глаза смотрели сквозь меня.
-
 — Ты принёс его с собой, да? — её голос звучал как шелест бумажных ширм.
 Я достал меч деда. Она кивнула, словно ждала этого.
-
 Рассказал ей всё: о шлеме, о тенях, о голосах. О том, как боль превращает мысли в кашу. Она слушала, не перебивая, а потом провела пальцем по лезвию. 
 Она зажгла чёрные свечи с запахом гвоздики, заставила меня сесть на циновку с вышитыми демонами. Потом поднесла к моим губам чашу с дымящимся чаем. Горький, как пепел. В глазах потемнело.
 */
