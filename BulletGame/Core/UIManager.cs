@@ -94,28 +94,26 @@ namespace BulletGame
         {
             _spriteBatch.Begin();
 
-            // Отрисовка здоровья игрока
-            _spriteBatch.DrawString(_textBlock, $"{_player.Model.Health} ед. Ки",
-                new Vector2(50, 50), Color.White);
-
-            // Отрисовка названия бонуса
-            _spriteBatch.DrawString(_textBlock, name,
-                new Vector2(480, 50), nameColor);
-
-            // Отрисовка уровня
-            _spriteBatch.DrawString(_textBlock, $"{lvl} Ступень",
-                new Vector2(880, 50), Color.White);
-
-            // Японские символы
-            _spriteBatch.DrawString(_japanTextBlock, "せ\nん\nし",
-                new Vector2(1750, 400), Color.White);
-            _spriteBatch.DrawString(_japanTextBlock, $"だいみょう", new Vector2(800, 940), Color.White);
-            _spriteBatch.DrawString(_japanTextBlock, $"ぶ\nし", new Vector2(100, 400), Color.White);
-
             if (!battleStarted)
             {
                 DrawPreBattleText();
             }
+            else
+            {
+                _spriteBatch.DrawString(_textBlock, $"{_player.Model.Health} ед. Ки",
+                new Vector2(50, 50), Color.White);
+
+                _spriteBatch.DrawString(_textBlock, name,
+                    new Vector2(480, 50), nameColor);
+
+                _spriteBatch.DrawString(_textBlock, $"{lvl} Ступень",
+                    new Vector2(880, 50), Color.White);
+            }
+        
+            _spriteBatch.DrawString(_japanTextBlock, "せ\nん\nし",
+                new Vector2(1750, 400), Color.White);
+            _spriteBatch.DrawString(_japanTextBlock, $"だいみょう", new Vector2(800, 940), Color.White);
+            _spriteBatch.DrawString(_japanTextBlock, $"ぶ\nし", new Vector2(100, 400), Color.White);
 
             _spriteBatch.End();
         }
@@ -140,14 +138,12 @@ namespace BulletGame
         {
             _spriteBatch.Begin();
 
-            // Заголовок меню
             Vector2 titlePosition = new Vector2(
                 _graphicsDevice.Viewport.Width / 2 - _textBlock.MeasureString("Game").X / 2,
                 200
             );
             _spriteBatch.DrawString(_textBlock, "Game", titlePosition, Color.White);
 
-            // Пункты меню
             for (int i = 0; i < menuItems.Length; i++)
             {
                 Color color = (i == selectedMenuItem) ? Color.Yellow : Color.White;

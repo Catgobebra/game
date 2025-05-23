@@ -1,5 +1,4 @@
-﻿// Bonus.cs
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -46,7 +45,7 @@ namespace BulletGame
                 player.Color = Color;
                 player.BonusHealth = Health;
             }
-            player.Health += Health+5;
+            player.Health += Health;
         }
 
         public void Draw(SpriteBatch spriteBatch, SpriteFont font)

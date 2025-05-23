@@ -34,6 +34,7 @@ namespace BulletGame
             _enemies = enemies;
             _bonuses = bonuses;
             _enemyWaveStack = nemyWaveStack;
+            _player = player;
             _attackPatterns = new List<AttackPattern>
             {
                 new AttackPattern(
@@ -66,7 +67,6 @@ namespace BulletGame
                 strategy: new AstroidStrategy(1.15f, Color.Cyan)),
 
             };
-            _player = player;
         }
 
         public Bonus CreateRandomBonus(Vector2 position)
@@ -267,7 +267,7 @@ namespace BulletGame
                 () => SpawnEnemy(
                 color: Color.SkyBlue,
                 pattern: new AttackPattern(
-                    0.1f, 250f, 100, false,
+                    0.1f, 250f, 1, false,
                     new StarPatternStrategy(Color.SkyBlue)
                     )
                 )
@@ -412,16 +412,17 @@ namespace BulletGame
                     pattern: _attackPatterns[0]
                 )
             };
+            _enemyWaveStack.Push(wave4);
 
-            _enemyWaveStack.Push(wave9);
-            /*_enemyWaveStack.Push(wave8);
+            //_enemyWaveStack.Push(wave9);
+            //_enemyWaveStack.Push(wave8);
             _enemyWaveStack.Push(wave7);
             _enemyWaveStack.Push(wave6);
             _enemyWaveStack.Push(wave5);
             _enemyWaveStack.Push(wave4);
             _enemyWaveStack.Push(wave3);
             _enemyWaveStack.Push(wave2);
-            _enemyWaveStack.Push(wave1);*/
+            //_enemyWaveStack.Push(wave1);
         }
 
         private Vector2 GetDirectionAimPlayer()
