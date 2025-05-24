@@ -44,6 +44,11 @@ namespace BulletGame
         private int CountBonusNow = 0;
         private int MaxCountBonus = 1;
 
+        private float _enemySpawnTimer = 0f;
+        private const float EnemySpawnInterval = 2f;
+
+        private bool _isWaveInProgress = false;
+
         private InputHandler _inputHandler;
 
         public enum GameState { Menu, Playing, Pause }
@@ -217,11 +222,13 @@ namespace BulletGame
             _inputHandler.IsSkipRequested = false;
             _spawnManager.InitializeWaveStack();
             _uiManager.ResetLevel1Intro();
+            _isWaveInProgress = false;
 
             CountEnemyNow = 0;
             CountBonusNow = 0;
             _canSpawnBonus = true;
             _bonusSpawnTimer = 0f;
+            _enemySpawnTimer = 0f;
 
             defaultBonus.ApplyEffect(player.Model);
             Name = defaultBonus.Name;
@@ -249,6 +256,7 @@ namespace BulletGame
                     battleStarted = true;
                     preBattleTimer = PreBattleDelay;
                     _spawnTimer = 0f;
+                    _inputHandler.IsSkipRequested = false;
                 }
 
                 base.Update(gameTime);
@@ -272,6 +280,9 @@ namespace BulletGame
                 base.Update(gameTime);
                 return;
             }
+
+
+            if (battleStarted && (!_isWaveInProgress)) _enemySpawnTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             foreach (var bonus in _bonuses.ToList())
             {
@@ -304,9 +315,17 @@ namespace BulletGame
             if (_spawnTimer >= SpawnInterval && MaxCountBonus > CountBonusNow)
                 SpawnBonus();
 
-            if (_enemies.Count == 0 && _enemyWaveStack.Count > 0)
+            if (_enemies.Count == 0 && _enemyWaveStack.Count > 0 && (_isWaveInProgress))
             {
+                _isWaveInProgress = false;
+            }
+
+            if (_enemies.Count == 0 && _enemyWaveStack.Count > 0 
+                && _enemySpawnTimer >= EnemySpawnInterval && (!_isWaveInProgress))
+            {
+                _isWaveInProgress = true;
                 _waveProcessor.ProcessNextWave();
+                _enemySpawnTimer = 0f;
             }
 
 

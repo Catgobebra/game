@@ -190,6 +190,7 @@ namespace BulletGame
         public void DrawMenu(int selectedMenuItem, string[] menuItems)
         {
             _spriteBatch.Begin();
+            DrawGameAreaBorders();
 
             Vector2 titlePosition = new Vector2(
                 _graphicsDevice.Viewport.Width / 2 - _textBlock.MeasureString("Game").X / 2,
@@ -254,6 +255,7 @@ namespace BulletGame
 
         private void DrawDefaultIntro()
         {
+            float alpha = MathHelper.Clamp(_frameTimer / FrameDuration * 10, 0f, 1f);
             string text = "Я постиг, что Путь Самурая это смерть." +
                 "В ситуации или или без колебаний выбирай смерть.\nЭто нетрудно. Исполнись решимости и действуй." +
                 "Только малодушные оправдывают себя\nрассуждениями о том, что умереть, не достигнув цели, означает" +
