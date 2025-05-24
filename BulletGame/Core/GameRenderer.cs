@@ -13,7 +13,7 @@ public class GameRenderer
     public GameRenderer(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice)
     {
         _spriteBatch = spriteBatch;
-        _graphicsDevice = graphicsDevice; // Сохраняем GraphicsDevice
+        _graphicsDevice = graphicsDevice;
     }
 
     public void Draw(

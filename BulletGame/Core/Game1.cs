@@ -29,6 +29,7 @@ namespace BulletGame
         private SpriteFont miniTextBlock;
         private SpriteFont japanTextBlock;
         private SpriteFont japanSymbol;
+        private SpriteFont miniS_TextBlock;
 
         private BulletManager _bulletManager;
 
@@ -62,6 +63,7 @@ namespace BulletGame
         private float _bonusSpawnTimer = 0f;
         private bool _canSpawnBonus = true;
 
+        private Texture2D[] _level1Textures;
 
         private int Lvl = 1;
         private string Name = "Пустота";
@@ -72,7 +74,7 @@ namespace BulletGame
 
         private bool battleStarted = false;
         private float preBattleTimer = 0f;
-        private const float PreBattleDelay = 40f;
+        private const float PreBattleDelay = 100f;
 
         private Rectangle _gameArea;
         private Viewport _gameViewport;
@@ -95,8 +97,16 @@ namespace BulletGame
             PrimitiveRenderer.Initialize(GraphicsDevice);
             _gameRenderer = new GameRenderer(spriteBatch, GraphicsDevice);
 
+            _level1Textures = new Texture2D[] {
+                Content.Load<Texture2D>("ascii-art (2)"),
+                Content.Load<Texture2D>("ascii-art"),
+                Content.Load<Texture2D>("ascii-art (4)"),
+                Content.Load<Texture2D>("ascii-art (3)")
+            };
+ 
             textBlock = Content.Load<SpriteFont>("File");
             miniTextBlock = Content.Load<SpriteFont>("FileMini");
+            miniS_TextBlock = Content.Load<SpriteFont>("FileMiniS");
             japanTextBlock = Content.Load<SpriteFont>("Japan");
             japanSymbol = Content.Load<SpriteFont>("JApanS");
 
@@ -111,6 +121,7 @@ namespace BulletGame
                textBlock,
                japanTextBlock,
                miniTextBlock,
+               miniS_TextBlock,
                japanSymbol,
                spriteBatch,
                GraphicsDevice,
@@ -118,7 +129,8 @@ namespace BulletGame
                _enemies,
                _bonuses,
                _bulletPool,
-               _gameArea
+               _gameArea,
+               _level1Textures
            );
         }
 
@@ -202,7 +214,9 @@ namespace BulletGame
             _spawnTimer = 0f;
             preBattleTimer = 0f;
             battleStarted = false;
+            _inputHandler.IsSkipRequested = false;
             _spawnManager.InitializeWaveStack();
+            _uiManager.ResetLevel1Intro();
 
             CountEnemyNow = 0;
             CountBonusNow = 0;
@@ -217,6 +231,11 @@ namespace BulletGame
 
         protected override void Update(GameTime gameTime)
         {
+            if (_currentState == GameState.Playing && !battleStarted)
+            {
+                _uiManager.UpdatePreBattle(gameTime, Lvl, _inputHandler.IsSkipRequested);
+            }
+
             if (_currentState == GameState.Menu)
             {
                 _menuInputHandler.Update();
@@ -337,10 +356,21 @@ namespace BulletGame
             else
             {
                 _uiManager.DrawGameUI(battleStarted, Name, NameColor, Lvl);
-                if (battleStarted) _gameRenderer.Draw(player, _enemies, _bonuses, _bulletPool, _uiManager._japanSymbol);
+
+                if (battleStarted)
+                {
+                    _gameRenderer.Draw(player, _enemies, _bonuses, _bulletPool, _uiManager._japanSymbol);
+                }
             }
 
             base.Draw(gameTime);
+        }
+
+        private float GetIntroAlpha()
+        {
+            float fadeStart = PreBattleDelay - 2f;
+            float fadeTime = MathHelper.Clamp(preBattleTimer - fadeStart, 0f, 2f);
+            return MathHelper.Lerp(1f, 0f, fadeTime / 2f);
         }
 
         private void SpawnBonus()

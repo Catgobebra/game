@@ -10,7 +10,10 @@ public class InputHandler
     private readonly Game1 _game;
     private readonly OptimizedBulletPool _bulletPool;
     private readonly Rectangle _gameArea;
-    public bool IsSkipRequested { get; private set; }
+    public bool IsSkipRequested { get; set; }
+
+    private float _skipCooldownTimer;
+    private const float SkipCooldown = 0.5f;
 
     private MouseState _prevMouseState;
     private KeyboardState _prevKeyboardState;
@@ -40,9 +43,7 @@ public class InputHandler
             PerformSpecialAttack();
         }
 
-        IsSkipRequested = keyboardState.IsKeyDown(Keys.Space) ||
-                         keyboardState.IsKeyDown(Keys.Enter) ||
-                         keyboardState.IsKeyDown(Keys.Escape);
+        IsSkipRequested = keyboardState.IsKeyDown(Keys.Space);
 
         _prevKeyboardState = keyboardState;
     }
