@@ -60,6 +60,7 @@ namespace BulletGame
             _gameArea = gameArea;
             _level1Textures = level1Textures;
             SetLvlText();
+            _skipRequested = false;
         }
 
         private void SetLvlText()

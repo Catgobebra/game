@@ -49,7 +49,7 @@ namespace BulletGame
 
         private bool _isWaveInProgress = false;
 
-        private InputHandler _inputHandler;
+        public InputHandler _inputHandler;
 
         public enum GameState { Menu, Playing, Pause }
 

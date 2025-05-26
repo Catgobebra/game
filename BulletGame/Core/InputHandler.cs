@@ -12,12 +12,12 @@ public class InputHandler
     private readonly Rectangle _gameArea;
     public bool IsSkipRequested { get; set; } = false;
 
-    private float _skipCooldownTimer = 0f;
+    private float _skipCooldownTimer = 4f;
     private const float SkipCooldown = 4f;
 
 
-    private MouseState _prevMouseState;
-    private KeyboardState _prevKeyboardState;
+    private MouseState _prevMouseState = Mouse.GetState();
+    private KeyboardState _prevKeyboardState = Keyboard.GetState();
 
     public InputHandler(PlayerController player, Game1 game,
                       OptimizedBulletPool bulletPool, Rectangle gameArea)
@@ -26,6 +26,9 @@ public class InputHandler
         _game = game;
         _bulletPool = bulletPool;
         _gameArea = gameArea;
+
+        _prevKeyboardState = Keyboard.GetState();
+        _prevMouseState = Mouse.GetState();
     }
 
     public void Update(GameTime gameTime)
@@ -57,6 +60,7 @@ public class InputHandler
             IsSkipRequested = true;
             _skipCooldownTimer = SkipCooldown;
         }
+
 
         _prevKeyboardState = keyboardState;
     }
