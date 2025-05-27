@@ -385,13 +385,6 @@ namespace BulletGame
             base.Draw(gameTime);
         }
 
-        private float GetIntroAlpha()
-        {
-            float fadeStart = PreBattleDelay - 2f;
-            float fadeTime = MathHelper.Clamp(preBattleTimer - fadeStart, 0f, 2f);
-            return MathHelper.Lerp(1f, 0f, fadeTime / 2f);
-        }
-
         private void SpawnBonus()
         {
             bool spawned = _spawnManager.SpawnBonus();
