@@ -42,6 +42,8 @@ namespace BulletGame
             if (Pattern != null)
             {
                 player.AdditionalAttack = Pattern;
+                player.BonusName = Name;
+                player.BonusColor = Color;
                 player.Color = Color;
                 player.BonusHealth = Health;
             }

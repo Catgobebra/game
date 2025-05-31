@@ -67,10 +67,10 @@ public class InputHandler
 
     private void HandleSystemInput()
     {
-        if (Keyboard.GetState().IsKeyDown(Keys.Escape))
+        if (Keyboard.GetState().IsKeyDown(Keys.Escape) )
         {
-            _game.ResetGameState();
-            _game._currentState = GameState.Menu;
+            _game._currentState = (_game._currentState == GameState.Playing)
+                ? GameState.Pause : GameState.Playing;
         }
     }
 

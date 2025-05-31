@@ -56,7 +56,7 @@ namespace BulletGame
         public GameState _currentState { get; set; } = GameState.Menu;
 
         public int _selectedMenuItem = 0;
-        public readonly string[] _menuItems = { "Новая игра", "Выход" };
+        public readonly string[] _menuItems = { "Новая игра", "Продолжить", "Выход" };
         private SpriteFont _menuFont;
         private const float MenuItemSpacing = 60f;
 
@@ -70,7 +70,7 @@ namespace BulletGame
 
         private Texture2D[] _level1Textures;
 
-        private int Lvl = 1;
+        public int Lvl = 2;
         private string Name = "Пустота";
         private Color NameColor = Color.White;
 
@@ -168,7 +168,7 @@ namespace BulletGame
            bulletsPerShot: 8,
            true,
            strategy: new ZRadiusBulletStrategy(() => _inputHandler.GetDirectionAimPlayer(), Color.White)));
-            player = new PlayerController(player_model, new PlayerView(player_model));
+           player = new PlayerController(player_model, new PlayerView(player_model));
 
             _bulletPool = new OptimizedBulletPool();
 
@@ -206,10 +206,8 @@ namespace BulletGame
             _uiManager._player = player;
         }
 
-        public void ResetGameState()
+        public void ResetGameState(int lvl = 1)
         {
-            player.Model.UpdatePosition(new Vector2(640,600));
-
             _enemies.Clear();
             _bonuses.Clear();
 
@@ -223,6 +221,7 @@ namespace BulletGame
             _spawnManager.InitializeWaveStack();
             _uiManager.ResetLevel1Intro();
             _isWaveInProgress = false;
+            Lvl = lvl;
 
             CountEnemyNow = 0;
             CountBonusNow = 0;
@@ -234,6 +233,12 @@ namespace BulletGame
             Name = defaultBonus.Name;
             NameColor = defaultBonus.Color;
             player.Model.Health = 8;
+
+            if (player.Model.GameArea.Width == 0 || player.Model.GameArea.Height == 0)
+            {
+                player.Model.GameArea = _gameArea;
+            }
+            player.Model.UpdatePosition(new Vector2(640, 600));
         }
 
         protected override void Update(GameTime gameTime)
@@ -247,6 +252,11 @@ namespace BulletGame
             {
                 _menuInputHandler.Update();
             }
+            else if (_currentState == GameState.Pause)
+            {
+                _menuInputHandler.Update();
+                base.Update(gameTime);
+            }
             else
             {
                 _inputHandler.Update(gameTime);
@@ -258,10 +268,15 @@ namespace BulletGame
                     _spawnTimer = 0f;
                     _inputHandler.IsSkipRequested = false;
                 }
-
+                Zaglusha(gameTime);
                 base.Update(gameTime);
             }
 
+            //base.Update(gameTime);
+        }
+
+        void Zaglusha(GameTime gameTime)
+        {
             preBattleTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
             _spawnTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -291,7 +306,7 @@ namespace BulletGame
                 {
                     _bonuses.Remove(bonus);
                     CountBonusNow--;
-                    _bonusSpawnTimer = BonusSpawnCooldown; 
+                    _bonusSpawnTimer = BonusSpawnCooldown;
                     _canSpawnBonus = false;
                 }
             }
@@ -320,7 +335,7 @@ namespace BulletGame
                 _isWaveInProgress = false;
             }
 
-            if (_enemies.Count == 0 && _enemyWaveStack.Count > 0 
+            if (_enemies.Count == 0 && _enemyWaveStack.Count > 0
                 && _enemySpawnTimer >= EnemySpawnInterval && (!_isWaveInProgress))
             {
                 _isWaveInProgress = true;
@@ -360,8 +375,6 @@ namespace BulletGame
                 ResetGameState();
                 _currentState = GameState.Menu;
             }
-
-            base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
@@ -370,7 +383,13 @@ namespace BulletGame
 
             if (_currentState == GameState.Menu)
             {
-                _uiManager.DrawMenu(_selectedMenuItem, _menuItems);
+                _uiManager.ResetMenuAnimation();
+                _uiManager.DrawMenu(_selectedMenuItem, _menuItems, gameTime);
+            }
+            else if (_currentState == GameState.Pause)
+            {
+                _uiManager.ResetMenuAnimation();
+                _uiManager.DrawMenu(_selectedMenuItem, _menuItems, gameTime);
             }
             else
             {

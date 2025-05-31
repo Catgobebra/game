@@ -42,9 +42,18 @@ public class MenuInputHandler
             {
                 case 0:
                     _game._currentState = GameState.Playing;
+                    _game.ResetGameState();
                     break;
                 case 1:
-                    _game.Exit();
+                    if (_game._currentState == GameState.Menu)
+                        _game.ResetGameState(_game.Lvl);
+                    _game._currentState = GameState.Playing;
+                    break;
+                case 2:
+                    if (_game._currentState == GameState.Menu)
+                        _game.Exit();
+                    else
+                        _game._currentState = GameState.Menu;
                     break;
             }
         }

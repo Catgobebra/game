@@ -31,6 +31,10 @@ namespace BulletGame
         private readonly OptimizedBulletPool _bulletPool;
         private readonly Rectangle _gameArea;
 
+        private float _menuAlpha = 0f;
+        private float _menuYOffset = 50f;
+        private const float MenuAppearSpeed = 2f;
+
         public UIManager(
             SpriteFont textBlock,
             SpriteFont japanTextBlock,
@@ -172,36 +176,31 @@ namespace BulletGame
             _spriteBatch.End();
         }
 
-        /*private void DrawPreBattleText()
+        public void DrawMenu(int selectedMenuItem, string[] menuItems, GameTime gameTime)
         {
-            string text = "Я постиг, что Путь Самурая это смерть." +
-                "В ситуации или или без колебаний выбирай смерть.\nЭто нетрудно. Исполнись решимости и действуй." +
-                "Только малодушные оправдывают себя\nрассуждениями о том, что умереть, не достигнув цели, означает" +
-                "умереть собачьей смертью.\nСделать правильный выбор в ситуации или или практически невозможно." +
-                "Все мы желаем\nжить, и поэтому неудивительно, что каждый пытается найти оправдание, чтобы не умирать\n" +
-                "Но если человек не достиг цели и продолжает жить, он проявляет малодушие. Он\nпоступает недостойно." +
-                "Если же он не достиг цели и умер, это действительно фанатизм и\nсобачья смерть. Но в этом нет ничего" +
-                "постыдного. Такая смерть есть Путь Самурая. Если \nкаждое утро и каждый вечер ты будешь готовить себя" +
-                "к смерти и сможешь жить так,\nсловнотвое тело уже умерло, ты станешь Подлинным самураем. Тогда вся" +
-                "твоя жизнь будет\nбезупречной, и ты преуспеешь на своем поприще.";
-            Vector2 position = new Vector2(320, 190);
-            _spriteBatch.DrawString(_miniTextBlock, text, position, Color.White);
-        }*/
+            if (_menuAlpha < 1f)
+            {
+                _menuAlpha += (float)gameTime.ElapsedGameTime.TotalSeconds * MenuAppearSpeed;
+                _menuYOffset = 50f * (1 - _menuAlpha);
+            }
+            else
+            {
+                _menuAlpha = 1f;
+                _menuYOffset = 0f;
+            }
 
-        public void DrawMenu(int selectedMenuItem, string[] menuItems)
-        {
             _spriteBatch.Begin();
             DrawGameAreaBorders();
 
             Vector2 titlePosition = new Vector2(
-                _graphicsDevice.Viewport.Width / 2 - _textBlock.MeasureString("Game").X / 2,
+                _graphicsDevice.Viewport.Width / 2 - _textBlock.MeasureString("Shinobi").X / 2,
                 200
             );
-            _spriteBatch.DrawString(_textBlock, "Game", titlePosition, Color.White);
+            _spriteBatch.DrawString(_textBlock, "Shinobi", titlePosition, Color.White);
 
             for (int i = 0; i < menuItems.Length; i++)
             {
-                Color color = (i == selectedMenuItem) ? Color.Yellow : Color.White;
+                Color color = (i == selectedMenuItem) ? Color.Red : Color.White;
                 Vector2 position = new Vector2(
                     _graphicsDevice.Viewport.Width / 2 - _textBlock.MeasureString(menuItems[i]).X / 2,
                     300 + i * 60
@@ -211,6 +210,13 @@ namespace BulletGame
 
             _spriteBatch.End();
         }
+
+        public void ResetMenuAnimation()
+        {
+            _menuAlpha = 0f;
+            _menuYOffset = 50f;
+        }
+
         public void DrawGameUI(bool battleStarted, string bonusName, Color bonusColor, int level)
         {
             DrawGameAreaBorders();
@@ -227,7 +233,7 @@ namespace BulletGame
 
             if (_skipRequested)
             {
-                _currentFrame = 4; // Пропускаем все кадры
+                _currentFrame = 4;
                 return;
             }
 

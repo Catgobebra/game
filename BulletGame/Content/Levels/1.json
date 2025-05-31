@@ -1,0 +1,31 @@
+{
+  "Name": "Пустота",
+  "NameColor": [255, 255, 255, 255],
+  "PlayerStartPosition": { "X": 640, "Y": 600 },
+  "PlayerHealth": 8,
+  "PreBattleDelay": 100,
+  "DefaultAttackPattern": {
+    "ShootInterval": 0.2,
+    "BulletSpeed": 900,
+    "BulletsPerShot": 8,
+    "StrategyType": "ZRadius",
+    "BulletColor": [255, 255, 255, 255]
+  },
+  "Waves": [
+    {
+      "EnemyType": "Basic",
+      "Count": 5,
+      "SpawnInterval": 2.0
+    },
+    {
+      "EnemyType": "Fast",
+      "Count": 3,
+      "SpawnInterval": 1.5
+    }
+  ],
+  "BonusSettings": {
+    "MaxCount": 1,
+    "SpawnCooldown": 8.0,
+    "Lifetime": 12.0
+  }
+}
