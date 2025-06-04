@@ -1,0 +1,236 @@
+{
+  "LevelNumber": 1,
+  "LevelName": "Пустота",
+  "LevelNameColor": {
+    "R": 255,
+    "G": 255,
+    "B": 255,
+    "A": 255
+  },
+  "MaxBonusCount": 1,
+  "BonusLifetime": 12.0,
+  "BonusSpawnCooldown": 8.0,
+  "PlayerStart": {
+    "Position": {
+      "X": 640,
+      "Y": 600
+    },
+    "Health": 800000
+  },
+  "Waves": [
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 340,
+            "Y": 250
+          },
+          "Color": {
+            "R": 146,
+            "G": 208,
+            "B": 80,
+            "A": 255
+          },
+          "PatternType": "Predefined",
+          "PatternParams": { "Index": "1" }
+        },
+        {
+          "Position": {
+            "X": 940,
+            "Y": 470
+          },
+          "Color": {
+            "R": 146,
+            "G": 208,
+            "B": 80,
+            "A": 255
+          },
+          "PatternType": "Predefined",
+          "PatternParams": { "Index": "1" }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 240,
+            "Y": 160
+          },
+          "Color": {
+            "R": 50,
+            "G": 205,
+            "B": 50,
+            "A": 255
+          },
+          "PatternType": "Predefined",
+          "PatternParams": { "Index": "3" }
+        },
+        {
+          "Position": {
+            "X": 1040,
+            "Y": 160
+          },
+          "Color": {
+            "R": 50,
+            "G": 205,
+            "B": 50,
+            "A": 255
+          },
+          "PatternType": "Predefined",
+          "PatternParams": { "Index": "3" }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 640,
+            "Y": 360
+          },
+          "Color": {
+            "R": 0,
+            "G": 139,
+            "B": 139,
+            "A": 255
+          },
+          "PatternType": "Predefined",
+          "PatternParams": { "Index": "2" }
+        },
+        {
+          "Position": {
+            "X": 640,
+            "Y": 60
+          },
+          "Color": {
+            "R": 139,
+            "G": 0,
+            "B": 0,
+            "A": 255
+          },
+          "PatternType": "Predefined",
+          "PatternParams": { "Index": "1" }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 140,
+            "Y": 160
+          },
+          "PatternType": "QuantumThread",
+          "PatternParams": {
+            "Color1": "Cyan",
+            "Color2": "Magenta",
+            "WaveSpeed": "3.0"
+          }
+        },
+        {
+          "Position": {
+            "X": 140,
+            "Y": 560
+          },
+          "PatternType": "QuantumThread",
+          "PatternParams": {
+            "Color1": "Yellow",
+            "Color2": "Red",
+            "WaveSpeed": "-3.0"
+          }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 240,
+            "Y": 360
+          },
+          "Color": {
+            "R": 128,
+            "G": 0,
+            "B": 128,
+            "A": 255
+          },
+          "PatternType": "MirrorSpiral",
+          "PatternParams": {
+            "Color": "Purple",
+            "Mirror": "true"
+          }
+        },
+        {
+          "Position": {
+            "X": 1040,
+            "Y": 360
+          },
+          "Color": {
+            "R": 0,
+            "G": 255,
+            "B": 255,
+            "A": 255
+          },
+          "PatternType": "MirrorSpiral",
+          "PatternParams": {
+            "Color": "Cyan",
+            "Mirror": "false"
+          }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 640,
+            "Y": 360
+          },
+          "Color": {
+            "R": 255,
+            "G": 165,
+            "B": 0,
+            "A": 255
+          },
+          "PatternType": "PulsingQuantum",
+          "PatternParams": {
+            "Color": "Orange"
+          }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 340,
+            "Y": 250
+          },
+          "Color": {
+            "R": 146,
+            "G": 208,
+            "B": 80,
+            "A": 255
+          },
+          "PatternType": "Predefined",
+          "PatternParams": { "Index": "1" }
+        },
+        {
+          "Position": {
+            "X": 940,
+            "Y": 470
+          },
+          "Color": {
+            "R": 146,
+            "G": 208,
+            "B": 80,
+            "A": 255
+          },
+          "PatternType": "Predefined",
+          "PatternParams": { "Index": "1" }
+        }
+      ]
+    }
+  ]
+}

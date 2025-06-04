@@ -1,34 +1,43 @@
-﻿// LevelData.cs
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
-namespace BulletGame
+namespace BulletGame.Core
 {
     public class LevelData
     {
-        public int LevelNumber { get; set; }
-        public string LevelName { get; set; }
-        public Color LevelNameColor { get; set; }
-        public int MaxEnemies { get; set; }
-        public int MaxBonuses { get; set; }
-        public float EnemySpawnInterval { get; set; }
-        public float BonusSpawnCooldown { get; set; }
-        public float PreBattleDelay { get; set; }
-        public List<Wave> Waves { get; set; }
+        public int LevelNumber { get; set; } = 1;
+        public string LevelName { get; set; } = "Пустота";
+        public Color LevelNameColor { get; set; } = Color.White;
+
+        public int MaxBonusCount { get; set; } = 1;
+        public float BonusLifetime { get; set; } = 12f;
+        public float BonusSpawnCooldown { get; set; } = 8f;
+
+        public List<WaveData> Waves { get; set; } = new List<WaveData>();
+
+        public PlayerStartingData PlayerStart { get; set; } = new PlayerStartingData();
     }
 
-    public class Wave
+    public class PlayerStartingData
     {
-        public List<EnemySpawnInfo> Enemies { get; set; }
+        public Vector2 Position { get; set; } = new Vector2(640, 600);
+        public int Health { get; set; } = 8;
     }
 
-    public class EnemySpawnInfo
+    public class WaveData
     {
-        public string Type { get; set; }
-        public Vector2 Position { get; set; }
-        public int Health { get; set; }
-        public float Speed { get; set; }
-        public string Pattern { get; set; }
-        public Color BulletColor { get; set; }
+        public float PreWaveDelay { get; set; } = 2.0f;
+        public string WaveMessage { get; set; } = "";
+        public Color MessageColor { get; set; } = Color.White;
+
+        public List<EnemySpawnData> Enemies { get; set; } = new List<EnemySpawnData>();
+    }
+
+    public class EnemySpawnData
+    {
+        public Vector2? Position { get; set; }
+        public Color? Color { get; set; }
+        public string PatternType { get; set; } = "Predefined";
+        public Dictionary<string, object> PatternParams { get; set; } = new Dictionary<string, object>();
     }
 }

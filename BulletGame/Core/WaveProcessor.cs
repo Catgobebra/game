@@ -6,20 +6,19 @@ public class WaveProcessor
 {
     private readonly Stack<object> _waveStack;
 
-
     public WaveProcessor(Stack<object> waveStack)
     {
         _waveStack = waveStack;
     }
 
-public void ProcessNextWave()
+    public void ProcessNextWave()
     {
         if (_waveStack.Count == 0) return;
         var wave = _waveStack.Pop();
         ProcessWaveItems(wave);
     }
 
-    private void ProcessWaveItems(object waveItem)
+    public void ProcessWaveItems(object waveItem)
     {
         var stack = new Stack<object>();
         stack.Push(waveItem);

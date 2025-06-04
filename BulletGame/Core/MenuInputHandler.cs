@@ -26,11 +26,11 @@ public class MenuInputHandler
     {
         if (keyboardState.IsKeyDown(Keys.Down) && !_prevKeyboardState.IsKeyDown(Keys.Down))
         {
-            _game._selectedMenuItem = (_game._selectedMenuItem + 1) % _game._menuItems.Length;
+            _game._selectedMenuItem = (_game._selectedMenuItem + 1) % _game.MenuItems.Length;
         }
         else if (keyboardState.IsKeyDown(Keys.Up) && !_prevKeyboardState.IsKeyDown(Keys.Up))
         {
-            _game._selectedMenuItem = (_game._selectedMenuItem - 1 + _game._menuItems.Length) % _game._menuItems.Length;
+            _game._selectedMenuItem = (_game._selectedMenuItem - 1 + _game.MenuItems.Length) % _game.MenuItems.Length;
         }
     }
 
@@ -38,23 +38,43 @@ public class MenuInputHandler
     {
         if (keyboardState.IsKeyDown(Keys.Enter) && !_prevKeyboardState.IsKeyDown(Keys.Enter))
         {
-            switch (_game._selectedMenuItem)
+            if (_game._currentState == GameState.Menu)
             {
-                case 0:
-                    _game._currentState = GameState.Playing;
-                    _game.ResetGameState();
-                    break;
-                case 1:
-                    if (_game._currentState == GameState.Menu)
+                switch (_game._selectedMenuItem)
+                {
+                    case 0:
+                        _game.ResetGameState(1);
+                        _game._currentState = GameState.Playing;
+                        _game.Arz();
+                        break;
+                    case 1:
                         _game.ResetGameState(_game.Lvl);
-                    _game._currentState = GameState.Playing;
-                    break;
-                case 2:
-                    if (_game._currentState == GameState.Menu)
+                        _game._currentState = GameState.Playing;
+                        _game.Arz();
+                        break;
+                    case 2:
                         _game.Exit();
-                    else
+                        break;
+                }
+            }
+            else if (_game._currentState == GameState.Pause)
+            {
+                switch (_game._selectedMenuItem)
+                {
+                    case 0:
+                        _game._currentState = GameState.Playing;
+                        _game.Arz();
+                        break;
+                    case 1:
+                        _game.ResetGameState(_game.Lvl);
+                        _game._currentState = GameState.Playing;
+                        _game.Arz();
+                        break;
+                    case 2:
                         _game._currentState = GameState.Menu;
-                    break;
+                        _game.Arz();
+                        break;
+                }
             }
         }
     }

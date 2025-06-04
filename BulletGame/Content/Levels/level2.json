@@ -1,0 +1,216 @@
+{
+  "LevelNumber": 2,
+  "LevelName": "Квантовые Вихри",
+  "LevelNameColor": {
+    "R": 0,
+    "G": 255,
+    "B": 255,
+    "A": 255
+  },
+  "MaxBonusCount": 2,
+  "BonusLifetime": 10.0,
+  "BonusSpawnCooldown": 7.0,
+  "PlayerStart": {
+    "Position": {
+      "X": 640,
+      "Y": 600
+    },
+    "Health": 650000
+  },
+  "Waves": [
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 240,
+            "Y": 100
+          },
+          "Color": {
+            "R": 100,
+            "G": 149,
+            "B": 237,
+            "A": 255
+          },
+          "PatternType": "Predefined",
+          "PatternParams": { "Index": "4" }
+        },
+        {
+          "Position": {
+            "X": 1040,
+            "Y": 100
+          },
+          "Color": {
+            "R": 100,
+            "G": 149,
+            "B": 237,
+            "A": 255
+          },
+          "PatternType": "Predefined",
+          "PatternParams": { "Index": "4" }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 640,
+            "Y": 100
+          },
+          "Color": {
+            "R": 255,
+            "G": 215,
+            "B": 0,
+            "A": 255
+          },
+          "PatternType": "Spiral",
+          "PatternParams": { "AngularSpeed": "1.8" }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 200,
+            "Y": 500
+          },
+          "Color": {
+            "R": 255,
+            "G": 105,
+            "B": 180,
+            "A": 255
+          },
+          "PatternType": "Predefined",
+          "PatternParams": { "Index": "5" }
+        },
+        {
+          "Position": {
+            "X": 1080,
+            "Y": 500
+          },
+          "Color": {
+            "R": 64,
+            "G": 224,
+            "B": 208,
+            "A": 255
+          },
+          "PatternType": "Predefined",
+          "PatternParams": { "Index": "5" }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 640,
+            "Y": 200
+          },
+          "PatternType": "QuantumVortex",
+          "PatternParams": {
+            "CoreColor": "Magenta",
+            "OrbitColor": "Cyan",
+            "RotationSpeed": "2.5"
+          }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 440,
+            "Y": 360
+          },
+          "PatternType": "MirrorSpiral",
+          "PatternParams": {
+            "Color": "Purple",
+            "Mirror": "true"
+          }
+        },
+        {
+          "Position": {
+            "X": 840,
+            "Y": 360
+          },
+          "PatternType": "MirrorSpiral",
+          "PatternParams": {
+            "Color": "Blue",
+            "Mirror": "false"
+          }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 340,
+            "Y": 150
+          },
+          "PatternType": "QuantumThread",
+          "PatternParams": {
+            "Color1": "Yellow",
+            "Color2": "Red",
+            "WaveSpeed": "4.0"
+          }
+        },
+        {
+          "Position": {
+            "X": 940,
+            "Y": 450
+          },
+          "PatternType": "QuantumThread",
+          "PatternParams": {
+            "Color1": "Green",
+            "Color2": "Blue",
+            "WaveSpeed": "-4.0"
+          }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 640,
+            "Y": 500
+          },
+          "Color": {
+            "R": 255,
+            "G": 69,
+            "B": 0,
+            "A": 255
+          },
+          "PatternType": "PulsingNova",
+          "PatternParams": {
+            "PulseColor": "Orange",
+            "ExplosionRadius": "120"
+          }
+        }
+      ]
+    },
+    {
+      "Enemies": [
+        {
+          "Position": {
+            "X": 640,
+            "Y": 100
+          },
+          "Color": {
+            "R": 138,
+            "G": 43,
+            "B": 226,
+            "A": 255
+          },
+          "PatternType": "ChaosSphere",
+          "PatternParams": {
+            "Layers": "3",
+            "ProjectileCount": "24"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -12,7 +12,7 @@ namespace BulletGame
 
         public float AttackEffectTimer { get; set; }
 
-        public float Speed { get; set; } = 500f;
+        public float Speed { get; set; } = 600f;
         public float Size { get; set; } = 20f;
 
         public string BonusName { get; set; }

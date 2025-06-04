@@ -1,10 +1,9 @@
-﻿using BulletGame.Core;
+﻿using BulletGame.Controllers;
+using BulletGame.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace BulletGame
 {
@@ -22,12 +21,13 @@ namespace BulletGame
         private float _frameTimer;
         private const float FrameDuration = 10f;
         private readonly string[] _level1Texts = new string[4];
+        private readonly string[] _defaultTexts = new string[2];
         private readonly Texture2D[] _level1Textures;
         private bool _skipRequested;
 
         public PlayerController _player;
         private readonly List<EnemyController> _enemies;
-        private readonly List<Bonus> _bonuses;
+        private readonly List<BonusController> _bonuses;
         private readonly OptimizedBulletPool _bulletPool;
         private readonly Rectangle _gameArea;
 
@@ -45,7 +45,7 @@ namespace BulletGame
             GraphicsDevice graphicsDevice,
             PlayerController player,
             List<EnemyController> enemies,
-            List<Bonus> bonuses,
+            List<BonusController> bonuses,
             OptimizedBulletPool bulletPool,
             Rectangle gameArea,
             Texture2D[] level1Textures)
@@ -64,6 +64,7 @@ namespace BulletGame
             _gameArea = gameArea;
             _level1Textures = level1Textures;
             SetLvlText();
+            SetDeafultLvlText();
             _skipRequested = false;
         }
 
@@ -108,6 +109,24 @@ namespace BulletGame
             "Она слушала, не перебивая, а потом провела пальцем по\nлезвию." +
             " Она зажгла чёрные свечи с запахом гвоздики, заставила меня сесть на циновку с\nвышитыми демонами. " +
             "Потом поднесла к моим губам чашу с дымящимся чаем. Горький, как пепел.\nВ глазах потемнело...";
+        }
+
+        private void SetDeafultLvlText()
+        {
+            _defaultTexts[0] = "Я постиг, что Путь Самурая - это смерть." +
+                "В ситуации или или без колебаний выбирай смерть.\nЭто нетрудно. Исполнись решимости и действуй." +
+                "Только малодушные оправдывают себя\nрассуждениями о том, что умереть, не достигнув цели, означает" +
+                "умереть собачьей смертью.\nСделать правильный выбор в ситуации или или практически невозможно." +
+                "Все мы желаем\nжить, и поэтому неудивительно, что каждый пытается найти оправдание, чтобы не умирать\n" +
+                "Но если человек не достиг цели и продолжает жить, он проявляет малодушие. Он\nпоступает недостойно." +
+                "Если же он не достиг цели и умер, это действительно фанатизм и\nсобачья смерть. Но в этом нет ничего" +
+                "постыдного. Такая смерть есть Путь Самурая. Если \nкаждое утро и каждый вечер ты будешь готовить себя" +
+                "к смерти и сможешь жить так,\nсловнотвое тело уже умерло, ты станешь Подлинным самураем. Тогда вся" +
+                "твоя жизнь будет\nбезупречной, и ты преуспеешь на своем поприще.";
+
+            _defaultTexts[1] = "О том, хорош человек или плох, можно судить по испытаниям, которые выпадают на его\nдолю." +
+                " Удача и неудача определяются нашей судьбой. Хорошие и плохие действия - это Путь\nчеловека." +
+                " Воздаяние за добро или зло - это всего лишь поучения проповедников.";
         }
 
         private void DrawGameAreaBorders()
@@ -178,34 +197,62 @@ namespace BulletGame
 
         public void DrawMenu(int selectedMenuItem, string[] menuItems, GameTime gameTime)
         {
+            // Обновление анимации появления
             if (_menuAlpha < 1f)
             {
                 _menuAlpha += (float)gameTime.ElapsedGameTime.TotalSeconds * MenuAppearSpeed;
-                _menuYOffset = 50f * (1 - _menuAlpha);
             }
             else
             {
                 _menuAlpha = 1f;
-                _menuYOffset = 0f;
             }
 
             _spriteBatch.Begin();
             DrawGameAreaBorders();
 
+            // Заголовок меню с плавным появлением
             Vector2 titlePosition = new Vector2(
                 _graphicsDevice.Viewport.Width / 2 - _textBlock.MeasureString("Shinobi").X / 2,
                 200
             );
-            _spriteBatch.DrawString(_textBlock, "Shinobi", titlePosition, Color.White);
+            _spriteBatch.DrawString(
+                _textBlock,
+                "Shinobi",
+                titlePosition,
+                Color.White * _menuAlpha // Применяем прозрачность
+            );
 
+            // Отрисовка пунктов меню
             for (int i = 0; i < menuItems.Length; i++)
             {
-                Color color = (i == selectedMenuItem) ? Color.Red : Color.White;
+                // Базовый цвет (невыбранные пункты)
+                Color color = Color.White;
+                float scale = 1f;
+
+                // Эффекты для выбранного пункта
+                if (i == selectedMenuItem)
+                {
+                    // Плавная пульсация прозрачности
+                    float pulse = (float)(Math.Sin(gameTime.TotalGameTime.TotalSeconds * 6) * 0.3f + 0.7f);
+                    color = Color.Red * pulse * _menuAlpha;
+                }
+                else
+                {
+                    // Плавное появление для невыбранных пунктов
+                    color = Color.White * _menuAlpha;
+                }
+
                 Vector2 position = new Vector2(
                     _graphicsDevice.Viewport.Width / 2 - _textBlock.MeasureString(menuItems[i]).X / 2,
                     300 + i * 60
                 );
-                _spriteBatch.DrawString(_textBlock, menuItems[i], position, color);
+
+                _spriteBatch.DrawString(
+                    _textBlock,
+                    menuItems[i],
+                    position,
+                    color
+                );
             }
 
             _spriteBatch.End();
@@ -255,24 +302,15 @@ namespace BulletGame
             }
             else
             {
-                DrawDefaultIntro();
+                DrawDefaultIntro(level);
             }
 
         }
 
-        private void DrawDefaultIntro()
+        private void DrawDefaultIntro(int lvl)
         {
             float alpha = MathHelper.Clamp(_frameTimer / FrameDuration * 10, 0f, 1f);
-            string text = "Я постиг, что Путь Самурая это смерть." +
-                "В ситуации или или без колебаний выбирай смерть.\nЭто нетрудно. Исполнись решимости и действуй." +
-                "Только малодушные оправдывают себя\nрассуждениями о том, что умереть, не достигнув цели, означает" +
-                "умереть собачьей смертью.\nСделать правильный выбор в ситуации или или практически невозможно." +
-                "Все мы желаем\nжить, и поэтому неудивительно, что каждый пытается найти оправдание, чтобы не умирать\n" +
-                "Но если человек не достиг цели и продолжает жить, он проявляет малодушие. Он\nпоступает недостойно." +
-                "Если же он не достиг цели и умер, это действительно фанатизм и\nсобачья смерть. Но в этом нет ничего" +
-                "постыдного. Такая смерть есть Путь Самурая. Если \nкаждое утро и каждый вечер ты будешь готовить себя" +
-                "к смерти и сможешь жить так,\nсловнотвое тело уже умерло, ты станешь Подлинным самураем. Тогда вся" +
-                "твоя жизнь будет\nбезупречной, и ты преуспеешь на своем поприще.";
+            string text = _defaultTexts[lvl-1];
 
             _spriteBatch.DrawString(_miniTextBlock, text, new Vector2(320, 190), Color.White);
         }

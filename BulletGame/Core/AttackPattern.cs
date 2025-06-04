@@ -6,7 +6,7 @@ public class AttackPattern
     public float ShootInterval { get; }
     public float BulletSpeed { get; }
     public int BulletsPerShot { get; }
-    public bool isPlayerBullet { get; }
+    public bool IsPlayerBullet { get; }
     private IAttackStrategy attackStrategy;
 
 
@@ -16,12 +16,12 @@ public class AttackPattern
         BulletSpeed = bulletSpeed;
         BulletsPerShot = bulletsPerShot;
         attackStrategy = strategy;
-        isPlayerBullet = playerBullet;
+        IsPlayerBullet = playerBullet;
     }
 
     public void Shoot(Vector2 position, OptimizedBulletPool OptimizedBulletPool)
     {
-        attackStrategy.Shoot(position, OptimizedBulletPool, BulletsPerShot, BulletSpeed, isPlayerBullet);
+        attackStrategy.Shoot(position, OptimizedBulletPool, BulletsPerShot, BulletSpeed, IsPlayerBullet);
     }
 
 }

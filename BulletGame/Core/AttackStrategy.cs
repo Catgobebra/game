@@ -217,12 +217,6 @@ public class PlayerExplosiveShotStrategy : IAttackStrategy
             bulletPool.GetBullet(position, dir, bulletSpeed * 0.7f, _explosionColor, isPlayerBullet);
         }
     }
-
-    private Vector2 GetMouseDirection(Vector2 shooterPosition)
-    {
-        MouseState mouseState = Mouse.GetState();
-        return new Vector2(mouseState.X, mouseState.Y) - shooterPosition;
-    }
 }
 
 public class StarPatternStrategy : IAttackStrategy
@@ -652,5 +646,155 @@ public class QuantumThreadStrategy : IAttackStrategy
 
             var bullet = pool.GetBullet(position, dir, speed * 1.5f, color, isPlayer);
         }
+    }
+}
+
+public class QuantumVortexStrategy : IAttackStrategy
+{
+    private readonly Color _coreColor;
+    private readonly Color _orbitColor;
+    private readonly float _rotationSpeed;
+    private float _rotationAngle;
+
+    public QuantumVortexStrategy(Color coreColor, Color orbitColor, float rotationSpeed)
+    {
+        _coreColor = coreColor;
+        _orbitColor = orbitColor;
+        _rotationSpeed = rotationSpeed;
+    }
+
+    public void Shoot(Vector2 position, OptimizedBulletPool pool,
+                     int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
+    {
+        // Внутреннее кольцо (4 пули)
+        CreateRing(position, 50f, 4, _coreColor, pool, bulletSpeed, isPlayerBullet);
+
+        // Внешнее кольцо (12 пуль)
+        CreateRing(position, 120f, 12, _orbitColor, pool, bulletSpeed * 0.8f, isPlayerBullet);
+
+        // Центральные перекрестные пули
+        CreateCross(position, _coreColor, pool, bulletSpeed * 1.2f, isPlayerBullet);
+
+        _rotationAngle += MathHelper.ToRadians(_rotationSpeed);
+    }
+
+    private void CreateRing(Vector2 center, float radius, int count, Color color,
+                           OptimizedBulletPool pool, float speed, bool isPlayer)
+    {
+        float angleStep = MathHelper.TwoPi / count;
+        for (int i = 0; i < count; i++)
+        {
+            float angle = angleStep * i + _rotationAngle;
+            Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+            Vector2 pos = center + dir * radius;
+
+            // Обратное направление для внешнего кольца
+            if (radius > 100f) dir = -dir;
+
+            pool.GetBullet(pos, dir, speed, color, isPlayer);
+        }
+    }
+
+    private void CreateCross(Vector2 center, Color color,
+                            OptimizedBulletPool pool, float speed, bool isPlayer)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            float angle = _rotationAngle * 2 + i * MathHelper.PiOver2;
+            Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+            pool.GetBullet(center, dir, speed, color, isPlayer);
+        }
+    }
+}
+
+public class PulsingNovaStrategy : IAttackStrategy
+{
+    private readonly Color _pulseColor;
+    private readonly float _explosionRadius;
+    private float _currentRadius;
+    private bool _expanding = true;
+
+    public PulsingNovaStrategy(Color pulseColor, float explosionRadius = 120f)
+    {
+        _pulseColor = pulseColor;
+        _explosionRadius = explosionRadius;
+        _currentRadius = 10f;
+    }
+
+    public void Shoot(Vector2 position, OptimizedBulletPool pool,
+                     int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
+    {
+        int segments = 16;
+        float angleStep = MathHelper.TwoPi / segments;
+
+        for (int i = 0; i < segments; i++)
+        {
+            float angle = angleStep * i;
+            Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+            Vector2 spawnPos = position + dir * _currentRadius;
+
+            pool.GetBullet(spawnPos, dir, bulletSpeed, _pulseColor, isPlayerBullet);
+        }
+
+        _currentRadius += _expanding ? 3f : -3f;
+
+        if (_currentRadius > _explosionRadius) _expanding = false;
+        if (_currentRadius < 10f) _expanding = true;
+    }
+}
+
+public class ChaosSphereStrategy : IAttackStrategy
+{
+    private readonly Color _baseColor;
+    private readonly int _layers;
+    private readonly int _projectileCount;
+    private float _rotation;
+
+    public ChaosSphereStrategy(Color baseColor, int layers = 3, int projectileCount = 24)
+    {
+        _baseColor = baseColor;
+        _layers = layers;
+        _projectileCount = projectileCount;
+    }
+
+    public void Shoot(Vector2 position, OptimizedBulletPool pool,
+                     int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
+    {
+        int bulletsPerLayer = _projectileCount / _layers;
+
+        for (int layer = 0; layer < _layers; layer++)
+        {
+            CreateSphereLayer(position, layer, bulletsPerLayer, pool, bulletSpeed, isPlayerBullet);
+        }
+
+        _rotation += MathHelper.ToRadians(2);
+    }
+
+    private void CreateSphereLayer(Vector2 center, int layer, int count,
+                                  OptimizedBulletPool pool, float speed, bool isPlayer)
+    {
+        float radius = 40f + layer * 30f;
+        float angleStep = MathHelper.TwoPi / count;
+        Color layerColor = GetLayerColor(layer);
+
+        for (int i = 0; i < count; i++)
+        {
+            float angle = angleStep * i + _rotation * (layer % 2 == 0 ? 1 : -1);
+            Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+            Vector2 spawnPos = center + dir * radius;
+
+            pool.GetBullet(spawnPos, dir, speed * (0.8f + layer * 0.1f), layerColor, isPlayer);
+        }
+    }
+
+    private Color GetLayerColor(int layer)
+    {
+        float ratio = (float)layer / _layers;
+        return new Color(
+            (byte)(_baseColor.R * (1 - ratio * 0.3f)),
+            (byte)(_baseColor.G * (1 - ratio * 0.5f)),
+            (byte)(_baseColor.B * (1 - ratio * 0.2f)),
+            _baseColor.A
+        );
     }
 }

@@ -1,79 +1,175 @@
-﻿// LevelLoader.cs
-using System.IO;
-using Newtonsoft.Json;
-using Microsoft.Xna.Framework;
-using Newtonsoft.Json.Linq;
+﻿using System.IO;
+using System.Text.Json;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using System;
+using System.Text.Json.Serialization;
 
-namespace BulletGame
+namespace BulletGame.Core
 {
     public static class LevelLoader
     {
         public static LevelData LoadLevel(int levelNumber)
         {
-            string path = $"Content/Levels/level_{levelNumber}.json";
+            string filePath = $"../../../Content/Levels/level{levelNumber}.json";
 
-            if (!File.Exists(path))
-            {
+            var b = Directory.GetCurrentDirectory();
+
+            if (!File.Exists(filePath))
                 return CreateDefaultLevel(levelNumber);
+
+            //try
+            //{
+                string json = File.ReadAllText(filePath);
+                return JsonSerializer.Deserialize<LevelData>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new ColorJsonConverter(), new DictionaryConverter() }
+                });
+
+            //}
+            //catch
+            //{
+            //   return CreateDefaultLevel(levelNumber);
+            //}
+        }
+
+        public class ColorJsonConverter : JsonConverter<Color>
+        {
+            public override Color Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                if (reader.TokenType == JsonTokenType.String)
+                {
+                    return GetColorFromString(reader.GetString());
+                }
+                else if (reader.TokenType == JsonTokenType.StartObject)
+                {
+                    using JsonDocument doc = JsonDocument.ParseValue(ref reader);
+                    var root = doc.RootElement;
+                    return new Color(
+                        root.GetProperty("R").GetByte(),
+                        root.GetProperty("G").GetByte(),
+                        root.GetProperty("B").GetByte(),
+                        root.GetProperty("A").GetByte()
+                    );
+                }
+                throw new JsonException("Unexpected JSON format for Color");
             }
 
-            string json = File.ReadAllText(path);
-            return JsonConvert.DeserializeObject<LevelData>(json, new JsonSerializerSettings
+            public override void Write(Utf8JsonWriter writer, Color value, JsonSerializerOptions options)
             {
-                Converters = { new Vector2Converter() }
-            });
+                writer.WriteStartObject();
+                writer.WriteNumber("R", value.R);
+                writer.WriteNumber("G", value.G);
+                writer.WriteNumber("B", value.B);
+                writer.WriteNumber("A", value.A);
+                writer.WriteEndObject();
+            }
+
+            private static Color GetColorFromString(string colorName)
+            {
+                return colorName.ToLower() switch
+                {
+                    "red" => Color.Red,
+                    "blue" => Color.Blue,
+                    "green" => Color.Green,
+                    "yellow" => Color.Yellow,
+                    "cyan" => Color.Cyan,
+                    "magenta" => Color.Magenta,
+                    "white" => Color.White,
+                    "black" => Color.Black,
+                    "purple" => Color.Purple,
+                    "orange" => Color.Orange,
+                    _ => Color.White
+                };
+            }
         }
+
+        public class DictionaryConverter : JsonConverter<Dictionary<string, object>>
+        {
+            public override Dictionary<string, object> Read(
+                ref Utf8JsonReader reader,
+                Type typeToConvert,
+                JsonSerializerOptions options)
+            {
+                var dictionary = new Dictionary<string, object>();
+
+                if (reader.TokenType != JsonTokenType.StartObject)
+                    throw new JsonException();
+
+                while (reader.Read())
+                {
+                    if (reader.TokenType == JsonTokenType.EndObject)
+                        return dictionary;
+
+                    if (reader.TokenType != JsonTokenType.PropertyName)
+                        throw new JsonException();
+
+                    string propertyName = reader.GetString();
+                    reader.Read();
+
+                    switch (reader.TokenType)
+                    {
+                        case JsonTokenType.String:
+                            dictionary.Add(propertyName, reader.GetString());
+                            break;
+                        case JsonTokenType.Number:
+                            if (reader.TryGetInt32(out int intValue))
+                                dictionary.Add(propertyName, intValue);
+                            else if (reader.TryGetDouble(out double doubleValue))
+                                dictionary.Add(propertyName, doubleValue);
+                            else
+                                dictionary.Add(propertyName, reader.GetDecimal());
+                            break;
+                        case JsonTokenType.True:
+                        case JsonTokenType.False:
+                            dictionary.Add(propertyName, reader.GetBoolean());
+                            break;
+                        default:
+                            throw new JsonException($"Unsupported token type: {reader.TokenType}");
+                    }
+                }
+
+                throw new JsonException();
+            }
+
+            public override void Write(
+                Utf8JsonWriter writer,
+                Dictionary<string, object> value,
+                JsonSerializerOptions options)
+            {
+                writer.WriteStartObject();
+                foreach (var kvp in value)
+                {
+                    writer.WritePropertyName(kvp.Key);
+                    JsonSerializer.Serialize(writer, kvp.Value, options);
+                }
+                writer.WriteEndObject();
+            }
+        }
+
         private static LevelData CreateDefaultLevel(int levelNumber)
         {
             return new LevelData
             {
                 LevelNumber = levelNumber,
-                LevelName = "Пустота",
-                LevelNameColor = Color.White,
-                MaxEnemies = 3,
-                MaxBonuses = 2,
-                EnemySpawnInterval = 2f,
-                BonusSpawnCooldown = 10f,
-                PreBattleDelay = 100f,
-                Waves = new List<Wave>
+                Waves = new List<WaveData>
                 {
-                    new Wave
+                    new WaveData
                     {
-                        Enemies = new List<EnemySpawnInfo>
+                        Enemies = new List<EnemySpawnData>
                         {
-                            new EnemySpawnInfo
-                            {
-                                Type = "Basic",
-                                Position = new Vector2(500, 200),
-                                Health = 3,
-                                Speed = 150f,
-                                Pattern = "Single",
-                                BulletColor = Color.Red
-                            }
+                            new EnemySpawnData { Position = new Vector2(0, 300) },
+                            new EnemySpawnData { Position = new Vector2(0, 300) }
                         }
                     }
+                },
+                PlayerStart = new PlayerStartingData
+                {
+                    Position = new Vector2(640, 600),
+                    Health = 8
                 }
             };
-        }
-    }
-    public class Vector2Converter : JsonConverter<Vector2>
-    {
-        public override Vector2 ReadJson(JsonReader reader, Type objectType, Vector2 existingValue, bool hasExistingValue, JsonSerializer serializer)
-        {
-            var obj = Newtonsoft.Json.Linq.JObject.Load(reader);
-            return new Vector2(obj["X"].Value<float>(), obj["Y"].Value<float>());
-        }
-
-        public override void WriteJson(JsonWriter writer, Vector2 value, JsonSerializer serializer)
-        {
-            writer.WriteStartObject();
-            writer.WritePropertyName("X");
-            writer.WriteValue(value.X);
-            writer.WritePropertyName("Y");
-            writer.WriteValue(value.Y);
-            writer.WriteEndObject();
         }
     }
 }
