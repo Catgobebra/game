@@ -1,24 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using BulletGame.Controller;
 using BulletGame.Controllers;
-using BulletGame.Core;
 using BulletGame.Models;
 using BulletGame.Views;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
 namespace BulletGame
 {
     public class Game1 : Game
     {
         private SpawnManager _spawnManager;
-
         private WaveProcessor _waveProcessor;
-
         private LevelData _currentLevelData;
-
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
         private SpriteFont textBlock;
@@ -26,9 +21,7 @@ namespace BulletGame
 
         private PlayerController player;
         private EnemyController enemy;
-        private MouseState prevMouseState;
-        private KeyboardState prevKeyboardState;
-        private KeyboardState _prevKeyboardState;
+
         private MenuInputHandler _menuInputHandler;
 
         private SpriteFont miniTextBlock;
@@ -44,13 +37,6 @@ namespace BulletGame
         private List<EnemyController> _enemies = new List<EnemyController>();
         private List<BonusController> _bonuses = new List<BonusController>();
 
-        private int CountEnemyNow = 0;
-        private int CountBonusNow = 0;
-        private int MaxCountBonus = 1;
-
-        private float _enemySpawnTimer = 0f;
-        private const float EnemySpawnInterval = 2f;
-
         private bool _isWaveInProgress = false;
 
         public InputHandler _inputHandler;
@@ -64,19 +50,15 @@ namespace BulletGame
         ? new[] { "Продолжить", "Начать заново", "Выход в меню" }
         : new[] { "Новая игра", "Продолжить", "Выход" };
 
-        private SpriteFont _menuFont;
         private const float MenuItemSpacing = 60f;
 
         private Stack<object> _enemyWaveStack = new Stack<object>();
 
-        private const float BonusLifetime = 12f;
-        private const float BonusSpawnCooldown = 8f;
-        private float _bonusSpawnTimer = 0f;
-        private bool _canSpawnBonus = true;
+        public GameplayManager _gameplayManager;
 
         private Texture2D[] _level1Textures;
 
-        public int Lvl = 2;
+        public int Lvl = 1;
         private string Name = "Пустота";
         private Color NameColor = Color.White;
 
@@ -144,12 +126,22 @@ namespace BulletGame
                _level1Textures
            );
 
-            // Применение параметров уровня
-            MaxCountBonus = _currentLevelData.MaxBonusCount;
+            _gameplayManager = new GameplayManager(
+            player,
+            _enemies,
+            _bonuses,
+            _enemyWaveStack,
+            _spawnManager,
+            _waveProcessor,
+            _bulletPool,
+            _bulletManager,
+            _uiManager,
+            _gameArea,
+            GraphicsDevice);
+
             Name = _currentLevelData.LevelName;
             NameColor = _currentLevelData.LevelNameColor;
 
-            // Инициализация волн
             _spawnManager.InitializeWaveStack(_currentLevelData);
         }
 
@@ -225,42 +217,6 @@ namespace BulletGame
             _uiManager._player = player;
         }
 
-        public void ResetGameState(int lvl = 1)
-        {
-            _enemies.Clear();
-            _bonuses.Clear();
-
-            _bulletPool.ForceCleanup();
-            _bulletPool.Cleanup();
-
-            Lvl = lvl;
-
-            _currentLevelData = LevelLoader.LoadLevel(lvl);
-
-            battleStarted = false;
-            preBattleTimer = 0f;
-            _spawnTimer = 0f;
-            _isWaveInProgress = false;
-
-            if (player.Model.GameArea.Width == 0 || player.Model.GameArea.Height == 0)
-            {
-                player.Model.GameArea = _gameArea;
-            }
-            player.Model.UpdatePosition(_currentLevelData.PlayerStart.Position);
-
-            MaxCountBonus = _currentLevelData.MaxBonusCount;
-            Name = _currentLevelData.LevelName;
-            NameColor = _currentLevelData.LevelNameColor;
-
-            player.Model.Health = _currentLevelData.PlayerStart.Health;
-
-            _spawnManager.InitializeWaveStack(_currentLevelData);
-
-            defaultBonus.ApplyEffect(player.Model);
-            Name = defaultBonus._model.Name;
-            NameColor = defaultBonus._model.Color;
-        }
-
         protected override void Update(GameTime gameTime)
         {
             if (_currentState == GameState.Playing && !battleStarted)
@@ -282,7 +238,6 @@ namespace BulletGame
                 if (Lvl < 2)
                 {
                     Lvl++;
-                    ResetGameState(Lvl);
                     _currentState = GameState.Playing;
                     _menuInputHandler.Update();
                 }
@@ -307,127 +262,13 @@ namespace BulletGame
                     _spawnTimer = 0f;
                     _inputHandler.IsSkipRequested = false;
                 }
-                Zaglusha(gameTime);
+                _gameplayManager.Update(gameTime, _inputHandler);
+                if (!_gameplayManager.IsPlayerAlive)
+                {
+                    _gameplayManager.ResetGameState();
+                    _currentState = GameState.Menu;
+                }
                 base.Update(gameTime);
-            }
-
-            //base.Update(gameTime);
-        }
-
-        void Zaglusha(GameTime gameTime)
-        {
-            preBattleTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-            _spawnTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-            if (!battleStarted)
-            {
-                preBattleTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                if (preBattleTimer >= PreBattleDelay)
-                {
-                    battleStarted = true;
-                    _spawnTimer = 0f;
-                }
-
-                player.Update(gameTime);
-
-                base.Update(gameTime);
-                return;
-            }
-
-
-            if (battleStarted && (!_isWaveInProgress)) _enemySpawnTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-            foreach (var bonus in _bonuses.ToList())
-            {
-                bonus.Update(deltaTime);
-                if (bonus._model.TimeLeft <= 0)
-                {
-                    _bonuses.Remove(bonus);
-                    CountBonusNow--;
-                    _bonusSpawnTimer = BonusSpawnCooldown;
-                    _canSpawnBonus = false;
-                }
-            }
-
-            if (!_canSpawnBonus)
-            {
-                _bonusSpawnTimer -= deltaTime;
-                if (_bonusSpawnTimer <= 0)
-                {
-                    _canSpawnBonus = true;
-                }
-            }
-
-            if (_canSpawnBonus && MaxCountBonus > CountBonusNow)
-            {
-                SpawnBonus();
-                _canSpawnBonus = false;
-                _bonusSpawnTimer = BonusSpawnCooldown;
-            }
-
-            if (_enemies.Count == 0 && _enemyWaveStack.Count > 0 && (_isWaveInProgress))
-            {
-                _isWaveInProgress = false;
-            }
-
-            if (_enemies.Count == 0 && _enemyWaveStack.Count > 0
-               && _enemySpawnTimer >= EnemySpawnInterval && (!_isWaveInProgress))
-            {
-                _isWaveInProgress = true;
-
-                var nextWave = _enemyWaveStack.Pop();
-
-                if (nextWave is WaveData waveData)
-                {
-                    _spawnManager.ProcessWaveData(waveData);
-                }
-                else if (nextWave is List<Action> actionWave)
-                {
-                    _waveProcessor.ProcessWaveItems(actionWave);
-                }
-
-                _enemySpawnTimer = 0f;
-            }
-
-            if (battleStarted &&
-                _enemies.Count == 0 &&
-                _enemyWaveStack.Count == 0)
-            {
-                _currentState = GameState.Victory;
-                battleStarted = false;
-            }
-
-            foreach (var enemy in _enemies.ToList())
-            {
-                enemy.Update(gameTime, _bulletPool);
-            }
-
-            foreach (var bonus in _bonuses.ToList())
-            {
-                if (SATCollision.CheckCollision(player.Model.GetVertices(), bonus._view.GetVertices()))
-                {
-                    bonus.ApplyEffect(player.Model);
-                    Name = bonus._model.Name;
-                    NameColor = bonus._model.Color;
-                    CountBonusNow--;
-                    _bonuses.Remove(bonus);
-                }
-            }
-
-            _bulletPool.Cleanup();
-
-            _bulletManager.Update(gameTime);
-
-            player.SetViewport(GraphicsDevice.Viewport);
-            player.SetGeameArea(_gameArea);
-
-            player.Update(gameTime);
-
-            if (player.Model.Health <= 0)
-            {
-                ResetGameState();
-                _currentState = GameState.Menu;
             }
         }
 
@@ -456,20 +297,9 @@ namespace BulletGame
             base.Draw(gameTime);
         }
 
-        public void Arz()
+        public void ResetAnimation()
         {
             _uiManager.ResetMenuAnimation();
-        }
-
-        private bool SpawnBonus()
-        {
-            bool spawned = _spawnManager.SpawnBonus();
-            if (spawned)
-            {
-                CountBonusNow++;
-                return true;
-            }
-            return false;
         }
     }
 }

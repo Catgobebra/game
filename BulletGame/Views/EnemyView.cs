@@ -24,7 +24,7 @@ namespace BulletGame
                 _model.Position,
                 scaledRadius,
                 Segments,
-                Color.Lerp(_model.Color, Color.Red, 1 - _model.CurrentScale / _model.MaxScale) // Добавляем цветовой эффект
+                Color.Lerp(_model.Color, Color.Red, 1 - _model.CurrentScale / _model.MaxScale)
             );
         }
 

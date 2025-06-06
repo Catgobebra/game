@@ -1,8 +1,8 @@
-﻿using BulletGame.Core;
-using BulletGame;
+﻿using BulletGame;
 using Microsoft.Xna.Framework;
 using System;
 using Microsoft.Xna.Framework.Input;
+using BulletGame.Controller;
 
 public interface IAttackStrategy
 {
@@ -666,13 +666,10 @@ public class QuantumVortexStrategy : IAttackStrategy
     public void Shoot(Vector2 position, OptimizedBulletPool pool,
                      int bulletsPerShot, float bulletSpeed, bool isPlayerBullet)
     {
-        // Внутреннее кольцо (4 пули)
         CreateRing(position, 50f, 4, _coreColor, pool, bulletSpeed, isPlayerBullet);
 
-        // Внешнее кольцо (12 пуль)
         CreateRing(position, 120f, 12, _orbitColor, pool, bulletSpeed * 0.8f, isPlayerBullet);
 
-        // Центральные перекрестные пули
         CreateCross(position, _coreColor, pool, bulletSpeed * 1.2f, isPlayerBullet);
 
         _rotationAngle += MathHelper.ToRadians(_rotationSpeed);
@@ -688,7 +685,6 @@ public class QuantumVortexStrategy : IAttackStrategy
             Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
             Vector2 pos = center + dir * radius;
 
-            // Обратное направление для внешнего кольца
             if (radius > 100f) dir = -dir;
 
             pool.GetBullet(pos, dir, speed, color, isPlayer);

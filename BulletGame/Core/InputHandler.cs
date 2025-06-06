@@ -1,8 +1,8 @@
-﻿using BulletGame.Core;
-using BulletGame;
+﻿using BulletGame;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework;
 using static BulletGame.Game1;
+using BulletGame.Controller;
 
 public class InputHandler
 {

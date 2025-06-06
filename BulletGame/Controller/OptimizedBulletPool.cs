@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace BulletGame.Core
+namespace BulletGame.Controller
 {
     public class OptimizedBulletPool
     {

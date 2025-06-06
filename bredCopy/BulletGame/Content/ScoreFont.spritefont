@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<XnaContent xmlns:Graphics="Microsoft.Xna.Framework.Content.Pipeline.Graphics">
+  <Asset Type="Graphics:FontDescription">
+    <FontName>Arial</FontName> <!-- Любой шрифт, установленный на вашем компьютере -->
+    <Size>24</Size>
+    <CharacterRegions>
+      <CharacterRegion>
+        <Start>&#32;</Start> <!-- Пробел -->
+        <End>&#126;</End>    <!-- Символ ~ -->
+      </CharacterRegion>
+    </CharacterRegions>
+  </Asset>
+</XnaContent>

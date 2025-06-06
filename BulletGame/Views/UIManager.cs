@@ -1,11 +1,11 @@
-﻿using BulletGame.Controllers;
-using BulletGame.Core;
+﻿using BulletGame.Controller;
+using BulletGame.Controllers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 
-namespace BulletGame
+namespace BulletGame.Views
 {
     public class UIManager
     {
@@ -70,7 +70,7 @@ namespace BulletGame
 
         private void SetLvlText()
         {
-            _level1Texts[0] =  "Сижу в этой прокуренной студии в Намба, пялюсь в монитор, а за спиной  шлем. Да,тот самый." +
+            _level1Texts[0] = "Сижу в этой прокуренной студии в Намба, пялюсь в монитор, а за спиной  шлем. Да,тот самый." +
             " С\nтреснутым козырьком, из-под которого сочится кровь. Врачи говорят: Панические атаки, стресс. " +
             "Но они\nне видят, как по ночам тени в кимоно шепчут: Тамэк... Не слышат, как сердце колотится, " +
             "словно хочет\nвырваться из грудной клетки и сбежать куда подальше." +
@@ -82,7 +82,7 @@ namespace BulletGame
             "В отражении за моей\nспиной стоял он в шлеме, с окровавленным мечом. " +
             "На стене медленно проступило: Добро пожаловать\nдомой...";
 
-            _level1Texts[1] =  "Я стою на пороге его квартиры. Дед. Хидео Такахара." +
+            _level1Texts[1] = "Я стою на пороге его квартиры. Дед. Хидео Такахара." +
             " Дверь скрипит, будто её не открывали\nдесятилетия. Внутри, запах плесени, старости и чего-то металлического. " +
             "Как кровь, засохшая в\nтрещинах дерева." +
             "Комната, коробка в три татами. Обои отслаиваются, пол прогнил, на потолке, жёлтые\nпятна от протечек. " +
@@ -186,7 +186,7 @@ namespace BulletGame
                 _spriteBatch.DrawString(_textBlock, $"{lvl} Ступень",
                     new Vector2(880, 50), Color.White);
             }
-        
+
             _spriteBatch.DrawString(_japanTextBlock, "せ\nん\nし",
                 new Vector2(1750, 400), Color.White);
             _spriteBatch.DrawString(_japanTextBlock, $"だいみょう", new Vector2(800, 940), Color.White);
@@ -197,7 +197,6 @@ namespace BulletGame
 
         public void DrawMenu(int selectedMenuItem, string[] menuItems, GameTime gameTime)
         {
-            // Обновление анимации появления
             if (_menuAlpha < 1f)
             {
                 _menuAlpha += (float)gameTime.ElapsedGameTime.TotalSeconds * MenuAppearSpeed;
@@ -210,35 +209,29 @@ namespace BulletGame
             _spriteBatch.Begin();
             DrawGameAreaBorders();
 
-            // Заголовок меню с плавным появлением
             Vector2 titlePosition = new Vector2(
                 _graphicsDevice.Viewport.Width / 2 - _textBlock.MeasureString("Shinobi").X / 2,
                 200
             );
             _spriteBatch.DrawString(
                 _textBlock,
-                "Shinobi",
+                "bwewe",
                 titlePosition,
-                Color.White * _menuAlpha // Применяем прозрачность
+                Color.White * _menuAlpha
             );
 
-            // Отрисовка пунктов меню
             for (int i = 0; i < menuItems.Length; i++)
             {
-                // Базовый цвет (невыбранные пункты)
                 Color color = Color.White;
                 float scale = 1f;
 
-                // Эффекты для выбранного пункта
                 if (i == selectedMenuItem)
                 {
-                    // Плавная пульсация прозрачности
                     float pulse = (float)(Math.Sin(gameTime.TotalGameTime.TotalSeconds * 6) * 0.3f + 0.7f);
                     color = Color.Red * pulse * _menuAlpha;
                 }
                 else
                 {
-                    // Плавное появление для невыбранных пунктов
                     color = Color.White * _menuAlpha;
                 }
 
@@ -310,7 +303,7 @@ namespace BulletGame
         private void DrawDefaultIntro(int lvl)
         {
             float alpha = MathHelper.Clamp(_frameTimer / FrameDuration * 10, 0f, 1f);
-            string text = _defaultTexts[lvl-1];
+            string text = _defaultTexts[lvl - 1];
 
             _spriteBatch.DrawString(_miniTextBlock, text, new Vector2(320, 190), Color.White);
         }

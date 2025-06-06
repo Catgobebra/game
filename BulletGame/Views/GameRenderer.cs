@@ -1,9 +1,9 @@
-﻿using BulletGame.Core;
-using BulletGame;
+﻿using BulletGame;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using BulletGame.Controllers;
+using BulletGame.Controller;
 
 
 public class GameRenderer

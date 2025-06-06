@@ -43,14 +43,14 @@ public class MenuInputHandler
                 switch (_game._selectedMenuItem)
                 {
                     case 0:
-                        _game.ResetGameState(1);
+                        _game._gameplayManager.ResetGameState(1);
                         _game._currentState = GameState.Playing;
-                        _game.Arz();
+                        _game.ResetAnimation();
                         break;
                     case 1:
-                        _game.ResetGameState(_game.Lvl);
+                        _game._gameplayManager.ResetGameState(_game.Lvl);
                         _game._currentState = GameState.Playing;
-                        _game.Arz();
+                        _game.ResetAnimation();
                         break;
                     case 2:
                         _game.Exit();
@@ -63,16 +63,16 @@ public class MenuInputHandler
                 {
                     case 0:
                         _game._currentState = GameState.Playing;
-                        _game.Arz();
+                        _game.ResetAnimation();
                         break;
                     case 1:
-                        _game.ResetGameState(_game.Lvl);
+                        _game._gameplayManager.ResetGameState(_game.Lvl);
                         _game._currentState = GameState.Playing;
-                        _game.Arz();
+                        _game.ResetAnimation();
                         break;
                     case 2:
                         _game._currentState = GameState.Menu;
-                        _game.Arz();
+                        _game.ResetAnimation();
                         break;
                 }
             }

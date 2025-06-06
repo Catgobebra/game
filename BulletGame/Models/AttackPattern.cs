@@ -1,4 +1,4 @@
-﻿using BulletGame.Core;
+﻿using BulletGame.Controller;
 using Microsoft.Xna.Framework;
 
 public class AttackPattern

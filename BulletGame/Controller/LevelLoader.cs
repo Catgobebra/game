@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using System;
 using System.Text.Json.Serialization;
+using BulletGame.Models;
 
-namespace BulletGame.Core
+namespace BulletGame.Controller
 {
     public static class LevelLoader
     {
@@ -18,8 +19,8 @@ namespace BulletGame.Core
             if (!File.Exists(filePath))
                 return CreateDefaultLevel(levelNumber);
 
-            //try
-            //{
+            try
+            {
                 string json = File.ReadAllText(filePath);
                 return JsonSerializer.Deserialize<LevelData>(json, new JsonSerializerOptions
                 {
@@ -27,11 +28,11 @@ namespace BulletGame.Core
                     Converters = { new ColorJsonConverter(), new DictionaryConverter() }
                 });
 
-            //}
-            //catch
-            //{
-            //   return CreateDefaultLevel(levelNumber);
-            //}
+            }
+            catch
+            {
+                return CreateDefaultLevel(levelNumber);
+            }
         }
 
         public class ColorJsonConverter : JsonConverter<Color>

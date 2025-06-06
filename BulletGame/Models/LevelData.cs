@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
-namespace BulletGame.Core
+namespace BulletGame.Models
 {
     public class LevelData
     {
